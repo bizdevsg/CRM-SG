@@ -137,27 +137,13 @@ async function createTables() {
   `);
 
   await query(`
-    CREATE TABLE IF NOT EXISTS user_biodata (
-      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-      user_id BIGINT NOT NULL,
-      label VARCHAR(120) NOT NULL,
-      value TEXT NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      CONSTRAINT fk_user_biodata_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-    )
-  `);
-
-  await query(`
     CREATE TABLE IF NOT EXISTS user_certificates (
       id BIGINT AUTO_INCREMENT PRIMARY KEY,
       user_id BIGINT NOT NULL,
       title VARCHAR(190) NOT NULL,
       issuer VARCHAR(190) NOT NULL,
       year VARCHAR(10) NOT NULL,
+      image_path VARCHAR(255) NULL,
       created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       CONSTRAINT fk_user_certificates_user
@@ -184,6 +170,16 @@ async function createTables() {
         ON UPDATE CASCADE
     )
   `);
+}
+
+async function ensureColumns() {
+  const certificateImageColumn = await query(
+    "SHOW COLUMNS FROM user_certificates LIKE 'image_path'"
+  );
+
+  if (certificateImageColumn.length === 0) {
+    await query("ALTER TABLE user_certificates ADD COLUMN image_path VARCHAR(255) NULL AFTER year");
+  }
 }
 
 async function seedBaseData() {
@@ -394,18 +390,6 @@ async function seedDemoData() {
   const budi = { id: budiInsert.insertId };
 
   await query(
-    "INSERT INTO user_biodata (user_id, label, value) VALUES (?, ?, ?), (?, ?, ?)",
-    [
-      rina.id,
-      "Spesialisasi",
-      "Properti residensial premium",
-      budi.id,
-      "Area Penjualan",
-      "Bandung Timur dan sekitarnya"
-    ]
-  );
-
-  await query(
     "INSERT INTO user_certificates (user_id, title, issuer, year) VALUES (?, ?, ?, ?), (?, ?, ?, ?)",
     [
       rina.id,
@@ -459,6 +443,7 @@ async function seedDemoData() {
 export async function initializeDatabase() {
   await createDatabaseIfNotExists();
   await createTables();
+  await ensureColumns();
   await seedBaseData();
   await seedDemoData();
 }

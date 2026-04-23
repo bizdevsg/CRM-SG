@@ -183,24 +183,15 @@ export function DashboardProvider({ children }) {
             }),
           "Akun marketing cabang berhasil dibuat."
         ),
-      addBiodata: (payload) =>
+      updateProfile: (payload) =>
         runAction(
           () =>
-            apiFetch("/marketing/me/biodata", {
-              method: "POST",
+            apiFetch("/marketing/me/profile", {
+              method: "PUT",
               token,
               body: payload
             }),
-          "Biodata berhasil ditambahkan."
-        ),
-      deleteBiodata: (entryId) =>
-        runAction(
-          () =>
-            apiFetch(`/marketing/me/biodata/${entryId}`, {
-              method: "DELETE",
-              token
-            }),
-          "Biodata berhasil dihapus."
+          "Profil berhasil diperbarui."
         ),
       addSocialMedia: (payload) =>
         runAction(
@@ -269,4 +260,3 @@ export function DashboardProvider({ children }) {
 export function useDashboard() {
   return useContext(DashboardContext);
 }
-

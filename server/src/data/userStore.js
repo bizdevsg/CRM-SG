@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import QRCode from "qrcode";
 import { query } from "../db/mysql.js";
+import { removeUploadedFile } from "../utils/uploadStorage.js";
 
 function slugify(value) {
   return value
@@ -53,15 +54,19 @@ function mapUserRow(row) {
     branchName: row.branch_name || null,
     createdById: row.manager_id ? Number(row.manager_id) : null,
     companyId: row.company_id ? Number(row.company_id) : null,
-    companyName: row.company_name || null
-  };
-}
-
-function mapBiodataEntry(row) {
-  return {
-    id: String(row.id),
-    label: row.label,
-    value: row.value
+    companyName: row.company_name || null,
+    username: row.username || null,
+    slug: row.slug || null,
+    nickname: row.nickname || null,
+    photo: row.photo || null,
+    jobTitle: row.job_title || null,
+    licenseNumber: row.license_number || null,
+    description: row.description || null,
+    phone: row.phone || null,
+    tiktok: row.tiktok || null,
+    instagram: row.instagram || null,
+    linkedin: row.linkedin || null,
+    whatsapp: row.whatsapp || null
   };
 }
 
@@ -70,7 +75,8 @@ function mapCertificateEntry(row) {
     id: String(row.id),
     title: row.title,
     issuer: row.issuer,
-    year: row.year
+    year: row.year,
+    imagePath: row.image_path || null
   };
 }
 
@@ -119,7 +125,15 @@ export function sanitizeUser(user) {
     branchId: branchId ? Number(branchId) : null,
     branchName: user.branchName || user.branch_name || null,
     createdById: createdById ? Number(createdById) : null,
-    companyId: companyId ? Number(companyId) : null
+    companyId: companyId ? Number(companyId) : null,
+    username: user.username || null,
+    slug: user.slug || null,
+    nickname: user.nickname || null,
+    photo: user.photo || null,
+    jobTitle: user.jobTitle || user.job_title || null,
+    licenseNumber: user.licenseNumber || user.license_number || null,
+    description: user.description || null,
+    phone: user.phone || null
   };
 }
 
@@ -317,9 +331,7 @@ export async function getUserById(id) {
   return {
     ...mapUserRow(row),
     passwordHash: row.password_hash,
-    branchCity: row.branch_city || null,
-    username: row.username,
-    slug: row.slug
+    branchCity: row.branch_city || null
   };
 }
 
@@ -414,14 +426,10 @@ export async function verifyPassword(user, plainPassword) {
 }
 
 export async function getMarketingResources(userId) {
-  const [userRow, biodataRows, certificateRows, ecardRows] = await Promise.all([
+  const [userRow, certificateRows, ecardRows] = await Promise.all([
     getUserBaseRowById(userId),
     query(
-      "SELECT id, label, value FROM user_biodata WHERE user_id = ? ORDER BY id DESC",
-      [userId]
-    ),
-    query(
-      "SELECT id, title, issuer, year FROM user_certificates WHERE user_id = ? ORDER BY id DESC",
+      "SELECT id, title, issuer, year, image_path FROM user_certificates WHERE user_id = ? ORDER BY id DESC",
       [userId]
     ),
     query(
@@ -429,6 +437,35 @@ export async function getMarketingResources(userId) {
       [userId]
     )
   ]);
+
+  const profile = {
+    username: userRow?.username || "",
+    slug: userRow?.slug || "",
+    fullName: userRow?.full_name || "",
+    nickname: userRow?.nickname || "",
+    photo: userRow?.photo || "",
+    jobTitle: userRow?.job_title || "",
+    licenseNumber: userRow?.license_number || "",
+    description: userRow?.description || "",
+    phone: userRow?.phone || "",
+    email: userRow?.email || "",
+    companyName: userRow?.company_name || "",
+    branchName: userRow?.branch_name || ""
+  };
+
+  const biodata = [
+    { id: "username", label: "Username", value: profile.username },
+    { id: "slug", label: "Slug", value: profile.slug },
+    { id: "fullName", label: "Nama Lengkap", value: profile.fullName },
+    { id: "nickname", label: "Nama Panggilan", value: profile.nickname },
+    { id: "jobTitle", label: "Jabatan", value: profile.jobTitle },
+    { id: "licenseNumber", label: "Nomor Lisensi", value: profile.licenseNumber },
+    { id: "phone", label: "No. Telepon", value: profile.phone },
+    { id: "email", label: "Email", value: profile.email },
+    { id: "companyName", label: "Perusahaan", value: profile.companyName },
+    { id: "branchName", label: "Cabang", value: profile.branchName },
+    { id: "description", label: "Deskripsi", value: profile.description }
+  ].filter((item) => item.value);
 
   const socialMedia = [
     userRow?.instagram ? { id: "instagram", platform: "Instagram", url: userRow.instagram } : null,
@@ -444,32 +481,55 @@ export async function getMarketingResources(userId) {
   ].filter(Boolean);
 
   return {
-    biodata: biodataRows.map(mapBiodataEntry),
+    profile,
+    biodata,
     socialMedia,
     certificates: certificateRows.map(mapCertificateEntry),
     ecards: ecardRows.map(mapEcardEntry)
   };
 }
 
-export async function addBiodataEntry(userId, payload) {
-  const result = await query(
-    "INSERT INTO user_biodata (user_id, label, value) VALUES (?, ?, ?)",
-    [userId, payload.label, payload.value]
+export async function updateUserProfile(userId, payload) {
+  const currentUser = await getUserBaseRowById(userId);
+  const username = buildUsername(payload.fullName, payload.email || "");
+  const slug = slugify(payload.slug || payload.fullName || username);
+  const nextPhoto =
+    payload.photo !== undefined ? payload.photo?.trim() || null : currentUser?.photo || null;
+
+  await query(
+    `UPDATE users
+      SET
+        username = ?,
+        slug = ?,
+        full_name = ?,
+        nickname = ?,
+        photo = ?,
+        job_title = ?,
+        license_number = ?,
+        description = ?,
+        phone = ?,
+        email = ?
+      WHERE id = ?`,
+    [
+      payload.username?.trim() || username,
+      slug,
+      payload.fullName?.trim() || null,
+      payload.nickname?.trim() || null,
+      nextPhoto,
+      payload.jobTitle?.trim() || null,
+      payload.licenseNumber?.trim() || null,
+      payload.description?.trim() || null,
+      payload.phone?.trim() || null,
+      payload.email?.trim().toLowerCase() || null,
+      userId
+    ]
   );
 
-  return {
-    id: String(result.insertId),
-    label: payload.label,
-    value: payload.value
-  };
-}
+  if (currentUser?.photo && currentUser.photo !== nextPhoto) {
+    await removeUploadedFile(currentUser.photo);
+  }
 
-export async function removeBiodataEntry(userId, entryId) {
-  const result = await query("DELETE FROM user_biodata WHERE id = ? AND user_id = ?", [
-    entryId,
-    userId
-  ]);
-  return result.affectedRows > 0;
+  return getUserById(userId);
 }
 
 export async function addSocialMediaEntry(userId, payload) {
@@ -508,23 +568,33 @@ export async function removeSocialMediaEntry(userId, entryId) {
 
 export async function addCertificateEntry(userId, payload) {
   const result = await query(
-    "INSERT INTO user_certificates (user_id, title, issuer, year) VALUES (?, ?, ?, ?)",
-    [userId, payload.title, payload.issuer, payload.year]
+    "INSERT INTO user_certificates (user_id, title, issuer, year, image_path) VALUES (?, ?, ?, ?, ?)",
+    [userId, payload.title, payload.issuer, payload.year, payload.imagePath || null]
   );
 
   return {
     id: String(result.insertId),
     title: payload.title,
     issuer: payload.issuer,
-    year: payload.year
+    year: payload.year,
+    imagePath: payload.imagePath || null
   };
 }
 
 export async function removeCertificateEntry(userId, entryId) {
+  const certificateRows = await query(
+    "SELECT image_path FROM user_certificates WHERE id = ? AND user_id = ?",
+    [entryId, userId]
+  );
   const result = await query("DELETE FROM user_certificates WHERE id = ? AND user_id = ?", [
     entryId,
     userId
   ]);
+
+  if (result.affectedRows > 0 && certificateRows[0]?.image_path) {
+    await removeUploadedFile(certificateRows[0].image_path);
+  }
+
   return result.affectedRows > 0;
 }
 

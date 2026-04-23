@@ -1,6 +1,8 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { initializeDatabase } from "./db/bootstrap.js";
 import { getMysqlConfig } from "./db/mysql.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -12,6 +14,7 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT) || 5050;
+const uploadsDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../uploads");
 
 app.use(
   cors({
@@ -19,6 +22,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use("/uploads", express.static(uploadsDirectory));
 
 app.get("/", (_req, res) => {
   res.json({
@@ -74,9 +78,12 @@ app.use("/api/marketing", marketingRoutes);
 app.use((error, _req, res, _next) => {
   console.error("Unhandled server error:", error);
   res.status(500).json({
-    message: error?.code === "ER_DUP_ENTRY"
-      ? "Data yang sama sudah ada di database."
-      : "Terjadi kesalahan pada server."
+    message:
+      error?.code === "ER_DUP_ENTRY"
+        ? "Data yang sama sudah ada di database."
+        : error?.code === "LIMIT_FILE_SIZE"
+          ? "Ukuran file maksimal 5MB."
+          : error?.message || "Terjadi kesalahan pada server."
   });
 });
 

@@ -1,18 +1,25 @@
 import { Router } from "express";
 import { authMiddleware, authorizeRoles } from "../middleware/authMiddleware.js";
+import { createImageUpload } from "../middleware/uploadMiddleware.js";
 import {
-  addBiodataEntry,
   addCertificateEntry,
   addSocialMediaEntry,
   createEcardEntry,
   getMarketingResources,
-  removeBiodataEntry,
   removeCertificateEntry,
   removeEcardEntry,
-  removeSocialMediaEntry
+  removeSocialMediaEntry,
+  updateUserProfile
 } from "../data/userStore.js";
+import { absolutePathToPublicPath, removeUploadedFile } from "../utils/uploadStorage.js";
+import { validateProfilePhotoFile } from "../utils/imageValidation.js";
 
 const router = Router();
+const profilePhotoUpload = createImageUpload("profile-photos", {
+  allowedMimeTypes: ["image/png"],
+  invalidTypeMessage: "Photo profile harus file PNG."
+});
+const certificateImageUpload = createImageUpload("certificate-images");
 
 router.use(authMiddleware);
 router.use(authorizeRoles("marketing"));
@@ -23,34 +30,51 @@ router.get("/me/resources", async (req, res) => {
   });
 });
 
-router.post("/me/biodata", async (req, res) => {
-  const { label, value } = req.body;
+router.put("/me/profile", profilePhotoUpload.single("photoFile"), async (req, res) => {
+  const { username, slug, fullName, nickname, photo, jobTitle, licenseNumber, description, phone, email } =
+    req.body;
+  const uploadedPhotoPath = req.file ? absolutePathToPublicPath(req.file.path) : null;
 
-  if (!label || !value) {
+  if (req.file) {
+    try {
+      await validateProfilePhotoFile(req.file.path);
+    } catch (error) {
+      if (uploadedPhotoPath) {
+        await removeUploadedFile(uploadedPhotoPath);
+      }
+
+      return res.status(400).json({
+        message: error.message
+      });
+    }
+  }
+
+  if (!fullName || !email) {
+    if (uploadedPhotoPath) {
+      await removeUploadedFile(uploadedPhotoPath);
+    }
+
     return res.status(400).json({
-      message: "Label biodata dan isinya wajib diisi."
+      message: "Nama lengkap dan email wajib diisi."
     });
   }
 
-  const entry = await addBiodataEntry(req.user.id, { label, value });
-
-  return res.status(201).json({
-    message: "Biodata berhasil ditambahkan.",
-    entry
+  const profile = await updateUserProfile(req.user.id, {
+    username,
+    slug,
+    fullName,
+    nickname,
+    photo: uploadedPhotoPath || photo,
+    jobTitle,
+    licenseNumber,
+    description,
+    phone,
+    email
   });
-});
-
-router.delete("/me/biodata/:entryId", async (req, res) => {
-  const removed = await removeBiodataEntry(req.user.id, req.params.entryId);
-
-  if (!removed) {
-    return res.status(404).json({
-      message: "Biodata tidak ditemukan."
-    });
-  }
 
   return res.json({
-    message: "Biodata berhasil dihapus."
+    message: "Profil user berhasil diperbarui.",
+    user: profile
   });
 });
 
@@ -85,16 +109,26 @@ router.delete("/me/social-media/:entryId", async (req, res) => {
   });
 });
 
-router.post("/me/certificates", async (req, res) => {
+router.post("/me/certificates", certificateImageUpload.single("imageFile"), async (req, res) => {
   const { title, issuer, year } = req.body;
+  const uploadedImagePath = req.file ? absolutePathToPublicPath(req.file.path) : null;
 
   if (!title || !issuer || !year) {
+    if (uploadedImagePath) {
+      await removeUploadedFile(uploadedImagePath);
+    }
+
     return res.status(400).json({
       message: "Judul, penerbit, dan tahun sertifikat wajib diisi."
     });
   }
 
-  const entry = await addCertificateEntry(req.user.id, { title, issuer, year });
+  const entry = await addCertificateEntry(req.user.id, {
+    title,
+    issuer,
+    year,
+    imagePath: uploadedImagePath
+  });
 
   return res.status(201).json({
     message: "Sertifikat berhasil ditambahkan.",
