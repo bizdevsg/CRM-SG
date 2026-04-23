@@ -1,0 +1,9 @@
+Unhandled server error: Error: "subject" must be a string
+    at D:\Website JS\ecard\node_modules\jsonwebtoken\sign.js:56:15
+    at Array.forEach (<anonymous>)
+    at validate (D:\Website JS\ecard\node_modules\jsonwebtoken\sign.js:47:6)
+    at validateOptions (D:\Website JS\ecard\node_modules\jsonwebtoken\sign.js:62:10)
+    at module.exports [as sign] (D:\Website JS\ecard\node_modules\jsonwebtoken\sign.js:171:5)
+    at createToken (file:///D:/Website%20JS/ecard/server/src/routes/authRoutes.js:8:14)
+    at createAuthPayload (file:///D:/Website%20JS/ecard/server/src/routes/authRoutes.js:24:12)
+    at file:///D:/Website%20JS/ecard/server/src/routes/authRoutes.js:53:19
