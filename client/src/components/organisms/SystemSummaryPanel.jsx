@@ -26,8 +26,11 @@ export default function SystemSummaryPanel() {
 
   return (
     <Card>
-      <div className="border-b border-slate-200 px-6 py-5">
-        <h2 className="text-xl font-bold text-slate-900">Ringkasan Sistem</h2>
+      <div className="border-b border-[color:var(--line)] px-6 py-5">
+        <h2 className="text-xl font-bold text-[color:var(--ink)]">Ringkasan Sistem</h2>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--ink-soft)]">
+          Snapshot singkat workspace aktif Anda pada sesi ini.
+        </p>
       </div>
       <div className="space-y-4 px-6 py-5">
         {summaryItems.map((item) => (
@@ -37,4 +40,3 @@ export default function SystemSummaryPanel() {
     </Card>
   );
 }
-

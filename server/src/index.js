@@ -8,6 +8,7 @@ import { getMysqlConfig } from "./db/mysql.js";
 import authRoutes from "./routes/authRoutes.js";
 import managementRoutes from "./routes/managementRoutes.js";
 import marketingRoutes from "./routes/marketingRoutes.js";
+import publicRoutes from "./routes/publicRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
 dotenv.config();
@@ -15,10 +16,34 @@ dotenv.config();
 const app = express();
 const port = Number(process.env.PORT) || 5050;
 const uploadsDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../uploads");
+const allowedOrigins = Array.from(
+  new Set(
+    [
+      process.env.CLIENT_URL || "http://localhost:5173",
+      "http://localhost:5173",
+      "http://127.0.0.1:5173"
+    ]
+      .flatMap((value) => String(value || "").split(","))
+      .map((value) => value.trim().replace(/\/+$/, ""))
+      .filter(Boolean)
+  )
+);
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = origin.replace(/\/+$/, "");
+
+      if (allowedOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin ${origin} tidak diizinkan oleh CORS.`));
+    }
   })
 );
 app.use(express.json());
@@ -28,7 +53,7 @@ app.get("/", (_req, res) => {
   res.json({
     status: "ok",
     message: "Backend Express aktif.",
-    frontendUrl: process.env.CLIENT_URL || "http://localhost:5173",
+    frontendUrl: allowedOrigins[0] || "http://localhost:5173",
     apiBaseUrl: `http://localhost:${port}/api`,
     endpoints: {
       health: "/api/health",
@@ -38,6 +63,7 @@ app.get("/", (_req, res) => {
       dashboard: "/api/users/dashboard-data",
       management: "/api/management/users",
       marketingResources: "/api/marketing/me/resources",
+      publicEcard: "/api/public/ecards/:companySlug/:branchCode/:ecardSlug",
       database: {
         host: getMysqlConfig().host,
         port: getMysqlConfig().port,
@@ -58,7 +84,8 @@ app.get("/api", (_req, res) => {
       profile: "/api/users/me",
       dashboard: "/api/users/dashboard-data",
       management: "/api/management/users",
-      marketingResources: "/api/marketing/me/resources"
+      marketingResources: "/api/marketing/me/resources",
+      publicEcard: "/api/public/ecards/:companySlug/:branchCode/:ecardSlug"
     }
   });
 });
@@ -74,6 +101,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/management", managementRoutes);
 app.use("/api/marketing", marketingRoutes);
+app.use("/api/public", publicRoutes);
 
 app.use((error, _req, res, _next) => {
   console.error("Unhandled server error:", error);

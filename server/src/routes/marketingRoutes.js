@@ -3,12 +3,12 @@ import { authMiddleware, authorizeRoles } from "../middleware/authMiddleware.js"
 import { createImageUpload } from "../middleware/uploadMiddleware.js";
 import {
   addCertificateEntry,
-  addSocialMediaEntry,
   createEcardEntry,
   getMarketingResources,
   removeCertificateEntry,
   removeEcardEntry,
-  removeSocialMediaEntry,
+  updateCertificateEntry,
+  updateEcardEntry,
   updateUserProfile
 } from "../data/userStore.js";
 import { absolutePathToPublicPath, removeUploadedFile } from "../utils/uploadStorage.js";
@@ -31,8 +31,16 @@ router.get("/me/resources", async (req, res) => {
 });
 
 router.put("/me/profile", profilePhotoUpload.single("photoFile"), async (req, res) => {
-  const { username, slug, fullName, nickname, photo, jobTitle, licenseNumber, description, phone, email } =
-    req.body;
+  const {
+    photo,
+    ecardJobTitle,
+    description,
+    phone,
+    instagram,
+    tiktok,
+    twitter,
+    linkedin
+  } = req.body;
   const uploadedPhotoPath = req.file ? absolutePathToPublicPath(req.file.path) : null;
 
   if (req.file) {
@@ -49,27 +57,15 @@ router.put("/me/profile", profilePhotoUpload.single("photoFile"), async (req, re
     }
   }
 
-  if (!fullName || !email) {
-    if (uploadedPhotoPath) {
-      await removeUploadedFile(uploadedPhotoPath);
-    }
-
-    return res.status(400).json({
-      message: "Nama lengkap dan email wajib diisi."
-    });
-  }
-
   const profile = await updateUserProfile(req.user.id, {
-    username,
-    slug,
-    fullName,
-    nickname,
     photo: uploadedPhotoPath || photo,
-    jobTitle,
-    licenseNumber,
+    ecardJobTitle,
     description,
     phone,
-    email
+    instagram,
+    tiktok,
+    twitter,
+    linkedin
   });
 
   return res.json({
@@ -78,60 +74,62 @@ router.put("/me/profile", profilePhotoUpload.single("photoFile"), async (req, re
   });
 });
 
-router.post("/me/social-media", async (req, res) => {
-  const { platform, url } = req.body;
-
-  if (!platform || !url) {
-    return res.status(400).json({
-      message: "Platform dan URL social media wajib diisi."
-    });
-  }
-
-  const entry = await addSocialMediaEntry(req.user.id, { platform, url });
-
-  return res.status(201).json({
-    message: "Social media berhasil ditambahkan.",
-    entry
-  });
-});
-
-router.delete("/me/social-media/:entryId", async (req, res) => {
-  const removed = await removeSocialMediaEntry(req.user.id, req.params.entryId);
-
-  if (!removed) {
-    return res.status(404).json({
-      message: "Social media tidak ditemukan."
-    });
-  }
-
-  return res.json({
-    message: "Social media berhasil dihapus."
-  });
-});
-
 router.post("/me/certificates", certificateImageUpload.single("imageFile"), async (req, res) => {
-  const { title, issuer, year } = req.body;
+  const { title } = req.body;
   const uploadedImagePath = req.file ? absolutePathToPublicPath(req.file.path) : null;
 
-  if (!title || !issuer || !year) {
+  if (!title) {
     if (uploadedImagePath) {
       await removeUploadedFile(uploadedImagePath);
     }
 
     return res.status(400).json({
-      message: "Judul, penerbit, dan tahun sertifikat wajib diisi."
+      message: "Judul sertifikat wajib diisi."
     });
   }
 
   const entry = await addCertificateEntry(req.user.id, {
     title,
-    issuer,
-    year,
     imagePath: uploadedImagePath
   });
 
   return res.status(201).json({
     message: "Sertifikat berhasil ditambahkan.",
+    entry
+  });
+});
+
+router.put("/me/certificates/:entryId", certificateImageUpload.single("imageFile"), async (req, res) => {
+  const { title } = req.body;
+  const uploadedImagePath = req.file ? absolutePathToPublicPath(req.file.path) : undefined;
+
+  if (!title) {
+    if (uploadedImagePath) {
+      await removeUploadedFile(uploadedImagePath);
+    }
+
+    return res.status(400).json({
+      message: "Judul sertifikat wajib diisi."
+    });
+  }
+
+  const entry = await updateCertificateEntry(req.user.id, req.params.entryId, {
+    title,
+    imagePath: uploadedImagePath
+  });
+
+  if (!entry) {
+    if (uploadedImagePath) {
+      await removeUploadedFile(uploadedImagePath);
+    }
+
+    return res.status(404).json({
+      message: "Sertifikat tidak ditemukan."
+    });
+  }
+
+  return res.json({
+    message: "Sertifikat berhasil diperbarui.",
     entry
   });
 });
@@ -159,10 +157,49 @@ router.post("/me/ecards", async (req, res) => {
     });
   }
 
-  const entry = await createEcardEntry(req.user.id, { title, slug });
+  let entry;
+
+  try {
+    entry = await createEcardEntry(req.user.id, { title, slug });
+  } catch (error) {
+    if (error.message === "Setiap marketing hanya boleh memiliki 1 QR e-card.") {
+      return res.status(409).json({
+        message: error.message
+      });
+    }
+
+    throw error;
+  }
 
   return res.status(201).json({
     message: "E-Card QR Code berhasil dibuat.",
+    entry
+  });
+});
+
+router.put("/me/ecards/:entryId", async (req, res) => {
+  const { title, slug, isActive } = req.body;
+
+  if (!title && !slug) {
+    return res.status(400).json({
+      message: "Judul atau slug e-card wajib diisi."
+    });
+  }
+
+  const entry = await updateEcardEntry(req.user.id, req.params.entryId, {
+    title,
+    slug,
+    isActive: isActive !== undefined ? Boolean(isActive) : true
+  });
+
+  if (!entry) {
+    return res.status(404).json({
+      message: "E-Card tidak ditemukan."
+    });
+  }
+
+  return res.json({
+    message: "E-Card berhasil diperbarui.",
     entry
   });
 });

@@ -1,6 +1,10 @@
 export const dashboardIcons = {
   dashboard:
     "M4 13h7V4H4v9Zm0 7h7v-5H4v5Zm9 0h7V11h-7v9Zm0-16v5h7V4h-7Z",
+  menu:
+    "M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z",
+  close:
+    "M18.3 5.71 12 12l6.3 6.29-1.41 1.41L10.59 13.41 4.29 19.7 2.88 18.29 9.17 12 2.88 5.71 4.29 4.3l6.3 6.29 6.29-6.3 1.42 1.42Z",
   branch:
     "M4 20h16v-2H4v2Zm2-4h3V4H6v12Zm5 0h3V8h-3v8Zm5 0h2V6h-2v10Z",
   users:
@@ -132,4 +136,3 @@ export function findMenuItemByPath(role, pathname) {
   const menu = getRoleDashboardConfig(role).menu;
   return menu.find((item) => item.to === pathname) || menu[0] || null;
 }
-

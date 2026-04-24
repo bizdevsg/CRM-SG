@@ -10,31 +10,31 @@ function buildSummaryCards(role, dashboard) {
   if (role === "superadmin") {
     return [
       {
-        label: "Cabang",
-        value: stats.totalBranches ?? 0,
-        description: "Total cabang aktif yang saat ini dikelola sistem.",
+        label: "Perusahaan",
+        value: stats.totalCompanies ?? 0,
+        description: "Total PT yang terdaftar pada platform e-card.",
         icon: "branch",
         tint: "bg-sky-50 text-sky-600"
       },
       {
+        label: "Cabang",
+        value: stats.totalBranches ?? 0,
+        description: "Jumlah cabang aktif lintas seluruh perusahaan.",
+        icon: "branch",
+        tint: "bg-amber-50 text-amber-600"
+      },
+      {
         label: "Admin Cabang",
         value: stats.totalAdmins ?? 0,
-        description: "Jumlah admin cabang dengan akses pengelolaan marketing.",
+        description: "Admin cabang yang mengelola marketing pada tiap PT.",
         icon: "shield",
-        tint: "bg-amber-50 text-amber-600"
+        tint: "bg-emerald-50 text-emerald-600"
       },
       {
         label: "Marketing",
         value: stats.totalMarketing ?? 0,
-        description: "Total akun marketing dari seluruh cabang.",
+        description: "Total akun marketing yang siap membuat e-card.",
         icon: "users",
-        tint: "bg-emerald-50 text-emerald-600"
-      },
-      {
-        label: "E-Card",
-        value: stats.totalEcards ?? 0,
-        description: "QR code E-Card yang sudah berhasil dibuat.",
-        icon: "qr",
         tint: "bg-fuchsia-50 text-fuchsia-600"
       }
     ];
@@ -52,14 +52,14 @@ function buildSummaryCards(role, dashboard) {
       {
         label: "Sertifikat",
         value: stats.totalCertificates ?? 0,
-        description: "Total sertifikat yang terdaftar pada tim marketing cabang.",
+        description: "Sertifikat yang dimiliki tim marketing cabang Anda.",
         icon: "certificate",
         tint: "bg-amber-50 text-amber-600"
       },
       {
         label: "E-Card",
         value: stats.totalEcards ?? 0,
-        description: "Jumlah E-Card yang dibuat oleh marketing cabang.",
+        description: "QR e-card yang sudah dibuat oleh tim marketing cabang.",
         icon: "qr",
         tint: "bg-emerald-50 text-emerald-600"
       }
@@ -70,28 +70,28 @@ function buildSummaryCards(role, dashboard) {
     {
       label: "Biodata",
       value: stats.biodataCount ?? 0,
-      description: "Jumlah biodata pribadi yang tersimpan di profil Anda.",
+      description: "Jumlah data profil utama yang sudah terisi.",
       icon: "profile",
       tint: "bg-sky-50 text-sky-600"
     },
     {
       label: "Social Media",
       value: stats.socialMediaCount ?? 0,
-      description: "Akun media sosial yang siap ditampilkan di E-Card.",
+      description: "Akun social media yang siap tampil pada e-card.",
       icon: "link",
       tint: "bg-amber-50 text-amber-600"
     },
     {
       label: "Sertifikat",
       value: stats.certificateCount ?? 0,
-      description: "Total sertifikat profesional yang sudah Anda masukkan.",
+      description: "Sertifikat milik Anda yang sudah tersimpan.",
       icon: "certificate",
       tint: "bg-emerald-50 text-emerald-600"
     },
     {
       label: "E-Card",
       value: stats.ecardCount ?? 0,
-      description: "QR code E-Card yang sudah berhasil Anda buat.",
+      description: "QR code e-card yang sudah berhasil dibuat.",
       icon: "qr",
       tint: "bg-fuchsia-50 text-fuchsia-600"
     }
@@ -163,6 +163,25 @@ export function DashboardProvider({ children }) {
             }),
           "Cabang baru berhasil ditambahkan."
         ),
+      updateBranch: (branchId, payload) =>
+        runAction(
+          () =>
+            apiFetch(`/management/branches/${branchId}`, {
+              method: "PUT",
+              token,
+              body: payload
+            }),
+          "Cabang berhasil diperbarui."
+        ),
+      deleteBranch: (branchId) =>
+        runAction(
+          () =>
+            apiFetch(`/management/branches/${branchId}`, {
+              method: "DELETE",
+              token
+            }),
+          "Cabang berhasil dihapus."
+        ),
       createManagedUser: (payload) =>
         runAction(
           () =>
@@ -172,6 +191,25 @@ export function DashboardProvider({ children }) {
               body: payload
             }),
           "Akun baru berhasil dibuat."
+        ),
+      updateManagedUser: (userId, payload) =>
+        runAction(
+          () =>
+            apiFetch(`/management/users/${userId}`, {
+              method: "PUT",
+              token,
+              body: payload
+            }),
+          "Akun berhasil diperbarui."
+        ),
+      deleteManagedUser: (userId) =>
+        runAction(
+          () =>
+            apiFetch(`/management/users/${userId}`, {
+              method: "DELETE",
+              token
+            }),
+          "Akun berhasil dihapus."
         ),
       createMarketing: (payload) =>
         runAction(
@@ -183,6 +221,25 @@ export function DashboardProvider({ children }) {
             }),
           "Akun marketing cabang berhasil dibuat."
         ),
+      updateMarketing: (userId, payload) =>
+        runAction(
+          () =>
+            apiFetch(`/management/users/${userId}`, {
+              method: "PUT",
+              token,
+              body: payload
+            }),
+          "Akun marketing berhasil diperbarui."
+        ),
+      deleteMarketing: (userId) =>
+        runAction(
+          () =>
+            apiFetch(`/management/users/${userId}`, {
+              method: "DELETE",
+              token
+            }),
+          "Akun marketing berhasil dihapus."
+        ),
       updateProfile: (payload) =>
         runAction(
           () =>
@@ -193,25 +250,6 @@ export function DashboardProvider({ children }) {
             }),
           "Profil berhasil diperbarui."
         ),
-      addSocialMedia: (payload) =>
-        runAction(
-          () =>
-            apiFetch("/marketing/me/social-media", {
-              method: "POST",
-              token,
-              body: payload
-            }),
-          "Social media berhasil ditambahkan."
-        ),
-      deleteSocialMedia: (entryId) =>
-        runAction(
-          () =>
-            apiFetch(`/marketing/me/social-media/${entryId}`, {
-              method: "DELETE",
-              token
-            }),
-          "Social media berhasil dihapus."
-        ),
       addCertificate: (payload) =>
         runAction(
           () =>
@@ -221,6 +259,16 @@ export function DashboardProvider({ children }) {
               body: payload
             }),
           "Sertifikat berhasil ditambahkan."
+        ),
+      updateCertificate: (entryId, payload) =>
+        runAction(
+          () =>
+            apiFetch(`/marketing/me/certificates/${entryId}`, {
+              method: "PUT",
+              token,
+              body: payload
+            }),
+          "Sertifikat berhasil diperbarui."
         ),
       deleteCertificate: (entryId) =>
         runAction(
@@ -240,6 +288,16 @@ export function DashboardProvider({ children }) {
               body: payload
             }),
           "E-Card baru berhasil dibuat."
+        ),
+      updateEcard: (entryId, payload) =>
+        runAction(
+          () =>
+            apiFetch(`/marketing/me/ecards/${entryId}`, {
+              method: "PUT",
+              token,
+              body: payload
+            }),
+          "E-Card berhasil diperbarui."
         ),
       deleteEcard: (entryId) =>
         runAction(

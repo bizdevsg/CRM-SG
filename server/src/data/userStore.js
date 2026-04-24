@@ -4,40 +4,73 @@ import { query } from "../db/mysql.js";
 import { removeUploadedFile } from "../utils/uploadStorage.js";
 
 function slugify(value) {
-  return value
+  return String(value || "")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 80);
+    .slice(0, 120);
 }
 
-function branchCodeFromCity(city) {
-  return (city || "general")
+function branchCodeFromName(value) {
+  return String(value || "")
     .toUpperCase()
     .trim()
     .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function normalizePlatform(platform) {
-  const value = platform.toLowerCase().trim();
-  const map = {
-    instagram: "instagram",
-    ig: "instagram",
-    linkedin: "linkedin",
-    tiktok: "tiktok",
-    whatsapp: "whatsapp",
-    wa: "whatsapp"
-  };
-
-  return map[value] || null;
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24);
 }
 
 function buildUsername(name, email) {
   const fallback = email?.split("@")[0] || "user";
-  const base = slugify(name || fallback).replace(/-/g, ".").slice(0, 50);
+  const base = slugify(name || fallback).replace(/-/g, ".").slice(0, 100);
   return base || fallback;
+}
+
+function getClientBaseUrl() {
+  const configuredUrl = String(process.env.CLIENT_URL || "http://localhost:5173")
+    .split(",")[0]
+    .trim()
+    .replace(/\/+$/, "");
+
+  return configuredUrl || "http://localhost:5173";
+}
+
+export function buildPublicEcardUrl(user) {
+  const companySegment = slugify(user.companyName || "company");
+  const branchSegment = branchCodeFromName(user.branchName || "branch").toLowerCase();
+  return `${getClientBaseUrl()}/${companySegment}/${branchSegment}/${user.slug}`;
+}
+
+function mapCompanyRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: Number(row.id),
+    name: row.name,
+    description: row.description || null,
+    videoUrl: row.video_url || null
+  };
+}
+
+function mapBranchRow(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: Number(row.id),
+    companyId: Number(row.company_id),
+    companyName: row.company_name || null,
+    name: row.name || null,
+    code: branchCodeFromName(row.name || `branch-${row.id}`),
+    address: row.address || null,
+    adminCount: Number(row.admin_count || 0),
+    marketingCount: Number(row.marketing_count || 0),
+    ecardCount: Number(row.ecard_count || 0)
+  };
 }
 
 function mapUserRow(row) {
@@ -47,26 +80,32 @@ function mapUserRow(row) {
 
   return {
     id: Number(row.id),
-    name: row.full_name,
-    email: row.email,
-    role: row.role_name,
-    branchId: row.branch_id ? Number(row.branch_id) : null,
-    branchName: row.branch_name || null,
-    createdById: row.manager_id ? Number(row.manager_id) : null,
+    name: row.name || null,
+    username: row.username || null,
+    email: row.email || null,
+    nik: row.nik || null,
+    role: row.role || null,
     companyId: row.company_id ? Number(row.company_id) : null,
     companyName: row.company_name || null,
-    username: row.username || null,
-    slug: row.slug || null,
-    nickname: row.nickname || null,
-    photo: row.photo || null,
-    jobTitle: row.job_title || null,
+    branchId: row.branch_id ? Number(row.branch_id) : null,
+    branchName: row.branch_name || null,
+    branchCode: branchCodeFromName(row.branch_name || row.branch_id),
+    branchAddress: row.branch_address || null,
     licenseNumber: row.license_number || null,
-    description: row.description || null,
-    phone: row.phone || null,
-    tiktok: row.tiktok || null,
+    positionTitle: row.real_position || null,
+    supervisorId: row.supervisor_user_id ? Number(row.supervisor_user_id) : null,
+    supervisorName: row.supervisor_name || null,
+    photo: row.photo_profile || null,
+    ecardJobTitle: row.display_position || row.real_position || null,
+    description: row.profile_description || null,
+    phone: row.phone_number || null,
     instagram: row.instagram || null,
+    tiktok: row.tiktok || null,
+    twitter: row.twitter || null,
     linkedin: row.linkedin || null,
-    whatsapp: row.whatsapp || null
+    certificateCount: Number(row.certificate_count || 0),
+    ecardCount: Number(row.ecard_count || 0),
+    passwordHash: row.password || null
   };
 }
 
@@ -74,37 +113,25 @@ function mapCertificateEntry(row) {
   return {
     id: String(row.id),
     title: row.title,
-    issuer: row.issuer,
-    year: row.year,
-    imagePath: row.image_path || null
+    imagePath: row.image_url || null
   };
 }
 
-function mapEcardEntry(row) {
+function mapEcardEntry(row, user) {
+  const slug = row.slug;
+  const publicUrl = buildPublicEcardUrl({
+    ...user,
+    slug
+  });
+
   return {
     id: String(row.id),
-    title: row.title,
-    slug: row.slug,
-    publicUrl: row.public_url,
-    qrCodeDataUrl: row.qr_code_data_url,
+    title: `E-Card ${user.name || slug}`,
+    slug,
+    publicUrl,
+    qrCodeDataUrl: row.qr_code_url,
+    isActive: Boolean(row.is_active),
     createdAt: row.created_at
-  };
-}
-
-function sanitizeBranch(row) {
-  if (!row) {
-    return null;
-  }
-
-  return {
-    id: Number(row.id),
-    companyId: Number(row.company_id),
-    name: row.name,
-    city: row.city,
-    code: branchCodeFromCity(row.city),
-    adminCount: Number(row.admin_count || 0),
-    marketingCount: Number(row.marketing_count || 0),
-    ecardCount: Number(row.ecard_count || 0)
   };
 }
 
@@ -113,32 +140,107 @@ export function sanitizeUser(user) {
     return null;
   }
 
-  const branchId = user.branchId ?? user.branch_id ?? null;
-  const createdById = user.createdById ?? user.manager_id ?? null;
-  const companyId = user.companyId ?? user.company_id ?? null;
-
   return {
     id: Number(user.id),
-    name: user.name || user.full_name,
-    email: user.email,
-    role: user.role || user.role_name,
-    branchId: branchId ? Number(branchId) : null,
-    branchName: user.branchName || user.branch_name || null,
-    createdById: createdById ? Number(createdById) : null,
-    companyId: companyId ? Number(companyId) : null,
+    name: user.name || null,
     username: user.username || null,
-    slug: user.slug || null,
-    nickname: user.nickname || null,
-    photo: user.photo || null,
-    jobTitle: user.jobTitle || user.job_title || null,
+    email: user.email || null,
+    nik: user.nik || null,
+    role: user.role || null,
+    companyId: user.companyId ?? (user.company_id ? Number(user.company_id) : null),
+    companyName: user.companyName || user.company_name || null,
+    branchId: user.branchId ?? (user.branch_id ? Number(user.branch_id) : null),
+    branchName: user.branchName || user.branch_name || null,
+    branchCode: user.branchCode || branchCodeFromName(user.branch_name || user.branchName),
+    branchAddress: user.branchAddress || user.branch_address || null,
     licenseNumber: user.licenseNumber || user.license_number || null,
-    description: user.description || null,
-    phone: user.phone || null
+    positionTitle: user.positionTitle || user.real_position || null,
+    supervisorId:
+      user.supervisorId ?? (user.supervisor_user_id ? Number(user.supervisor_user_id) : null),
+    supervisorName: user.supervisorName || user.supervisor_name || null,
+    photo: user.photo || user.photo_profile || null,
+    ecardJobTitle: user.ecardJobTitle || user.display_position || null,
+    description: user.description || user.profile_description || null,
+    phone: user.phone || user.phone_number || null,
+    instagram: user.instagram || null,
+    tiktok: user.tiktok || null,
+    twitter: user.twitter || null,
+    linkedin: user.linkedin || null
   };
 }
 
-async function getRoleByName(roleName) {
-  const rows = await query("SELECT id, name FROM roles WHERE name = ?", [roleName]);
+async function getUserRowByUniqueField(fieldName, value, excludeUserId = null) {
+  const params = [value];
+  const excludeClause = excludeUserId ? "AND id <> ?" : "";
+
+  if (excludeUserId) {
+    params.push(excludeUserId);
+  }
+
+  const rows = await query(
+    `SELECT id
+      FROM users
+      WHERE ${fieldName} = ?
+      ${excludeClause}
+      LIMIT 1`,
+    params
+  );
+
+  return rows[0] || null;
+}
+
+async function ensureUsernameAvailable(username, excludeUserId = null) {
+  const existing = await getUserRowByUniqueField("username", username, excludeUserId);
+
+  if (existing) {
+    throw new Error("Username sudah dipakai.");
+  }
+}
+
+async function ensureEmailAvailable(email, excludeUserId = null) {
+  const existing = await getUserRowByUniqueField("email", email.toLowerCase(), excludeUserId);
+
+  if (existing) {
+    throw new Error("Email sudah terdaftar.");
+  }
+}
+
+async function getUserBaseRowById(userId) {
+  const rows = await query(
+    `SELECT
+      u.id,
+      u.name,
+      u.username,
+      u.email,
+      u.password,
+      u.nik,
+      u.license_number,
+      u.real_position,
+      u.company_id,
+      c.name AS company_name,
+      u.branch_id,
+      b.name AS branch_name,
+      b.address AS branch_address,
+      u.role,
+      up.photo_profile,
+      up.display_position,
+      up.description AS profile_description,
+      up.phone_number,
+      up.instagram,
+      up.tiktok,
+      up.twitter,
+      up.linkedin,
+      up.supervisor_user_id,
+      COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
+    FROM users u
+    LEFT JOIN companies c ON c.id = u.company_id
+    LEFT JOIN branches b ON b.id = u.branch_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
+    WHERE u.id = ?`,
+    [userId]
+  );
+
   return rows[0] || null;
 }
 
@@ -147,192 +249,344 @@ async function getCompanyIdFromBranch(branchId) {
   return rows[0]?.company_id || null;
 }
 
-async function getBranchRowById(branchId) {
+async function listCertificates(filters = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (filters.userId) {
+    conditions.push("mc.user_id = ?");
+    params.push(filters.userId);
+  }
+
+  if (filters.branchId) {
+    conditions.push("u.branch_id = ?");
+    params.push(filters.branchId);
+  }
+
+  if (filters.companyId) {
+    conditions.push("u.company_id = ?");
+    params.push(filters.companyId);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const rows = await query(
+    `SELECT
+      mc.id,
+      mc.user_id,
+      mc.title,
+      mc.image_url,
+      u.name AS user_name,
+      u.company_id,
+      c.name AS company_name,
+      u.branch_id,
+      b.name AS branch_name
+    FROM marketing_certificates mc
+    INNER JOIN users u ON u.id = mc.user_id
+    LEFT JOIN companies c ON c.id = u.company_id
+    LEFT JOIN branches b ON b.id = u.branch_id
+    ${whereClause}
+    ORDER BY mc.id DESC`,
+    params
+  );
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    userId: Number(row.user_id),
+    userName: row.user_name,
+    companyId: row.company_id ? Number(row.company_id) : null,
+    companyName: row.company_name || null,
+    branchId: row.branch_id ? Number(row.branch_id) : null,
+    branchName: row.branch_name || null,
+    title: row.title,
+    imagePath: row.image_url || null
+  }));
+}
+
+async function listEcards(filters = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (filters.userId) {
+    conditions.push("e.user_id = ?");
+    params.push(filters.userId);
+  }
+
+  if (filters.branchId) {
+    conditions.push("u.branch_id = ?");
+    params.push(filters.branchId);
+  }
+
+  if (filters.companyId) {
+    conditions.push("u.company_id = ?");
+    params.push(filters.companyId);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+  const rows = await query(
+    `SELECT
+      e.id,
+      e.user_id,
+      e.slug,
+      e.qr_code_url,
+      e.is_active,
+      e.created_at,
+      u.name AS user_name,
+      u.company_id,
+      c.name AS company_name,
+      u.branch_id,
+      b.name AS branch_name
+    FROM ecards e
+    INNER JOIN users u ON u.id = e.user_id
+    LEFT JOIN companies c ON c.id = u.company_id
+    LEFT JOIN branches b ON b.id = u.branch_id
+    ${whereClause}
+    ORDER BY e.id DESC`,
+    params
+  );
+
+  return rows.map((row) => {
+    const user = {
+      name: row.user_name,
+      companyName: row.company_name,
+      branchName: row.branch_name,
+      slug: row.slug
+    };
+
+    return {
+      id: String(row.id),
+      userId: Number(row.user_id),
+      userName: row.user_name,
+      companyId: row.company_id ? Number(row.company_id) : null,
+      companyName: row.company_name || null,
+      branchId: row.branch_id ? Number(row.branch_id) : null,
+      branchName: row.branch_name || null,
+      slug: row.slug,
+      qrCodeDataUrl: row.qr_code_url || null,
+      publicUrl: buildPublicEcardUrl(user),
+      isActive: Boolean(row.is_active),
+      createdAt: row.created_at
+    };
+  });
+}
+
+async function upsertUserProfile(userId, payload) {
+  const rows = await query("SELECT id FROM user_profiles WHERE user_id = ? LIMIT 1", [userId]);
+
+  if (rows.length === 0) {
+    await query(
+      `INSERT INTO user_profiles (
+        user_id,
+        photo_profile,
+        display_position,
+        description,
+        phone_number,
+        instagram,
+        tiktok,
+        twitter,
+        linkedin,
+        supervisor_user_id,
+        supervisor_name
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        payload.photo || null,
+        payload.ecardJobTitle || null,
+        payload.description || null,
+        payload.phone || null,
+        payload.instagram || null,
+        payload.tiktok || null,
+        payload.twitter || null,
+        payload.linkedin || null,
+        payload.supervisorId || null,
+        payload.supervisorName || null
+      ]
+    );
+    return;
+  }
+
+  await query(
+    `UPDATE user_profiles
+      SET
+        photo_profile = ?,
+        display_position = ?,
+        description = ?,
+        phone_number = ?,
+        instagram = ?,
+        tiktok = ?,
+        twitter = ?,
+        linkedin = ?,
+        supervisor_user_id = ?,
+        supervisor_name = ?
+      WHERE user_id = ?`,
+    [
+      payload.photo || null,
+      payload.ecardJobTitle || null,
+      payload.description || null,
+      payload.phone || null,
+      payload.instagram || null,
+      payload.tiktok || null,
+      payload.twitter || null,
+      payload.linkedin || null,
+      payload.supervisorId || null,
+      payload.supervisorName || null,
+      userId
+    ]
+  );
+}
+
+export async function listCompanies() {
+  const rows = await query(
+    "SELECT id, name, description, video_url FROM companies ORDER BY name ASC"
+  );
+  return rows.map(mapCompanyRow);
+}
+
+export async function listBranches(filters = {}) {
+  const conditions = [];
+  const params = [];
+
+  if (filters.companyId) {
+    conditions.push("b.company_id = ?");
+    params.push(filters.companyId);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const rows = await query(
     `SELECT
       b.id,
       b.company_id,
+      c.name AS company_name,
       b.name,
-      b.city,
+      b.address,
       (
         SELECT COUNT(*)
         FROM users u
-        INNER JOIN roles r ON r.id = u.role_id
-        WHERE u.branch_id = b.id AND r.name = 'admin'
+        WHERE u.branch_id = b.id AND u.role = 'admin'
       ) AS admin_count,
       (
         SELECT COUNT(*)
         FROM users u
-        INNER JOIN roles r ON r.id = u.role_id
-        WHERE u.branch_id = b.id AND r.name = 'marketing'
+        WHERE u.branch_id = b.id AND u.role = 'marketing'
       ) AS marketing_count,
       (
         SELECT COUNT(*)
-        FROM user_ecards e
+        FROM ecards e
         INNER JOIN users u ON u.id = e.user_id
         WHERE u.branch_id = b.id
       ) AS ecard_count
     FROM branches b
+    INNER JOIN companies c ON c.id = b.company_id
+    ${whereClause}
+    ORDER BY c.name ASC, b.name ASC`,
+    params
+  );
+
+  return rows.map(mapBranchRow);
+}
+
+export async function getBranchById(branchId) {
+  const rows = await query(
+    `SELECT
+      b.id,
+      b.company_id,
+      c.name AS company_name,
+      b.name,
+      b.address,
+      (
+        SELECT COUNT(*)
+        FROM users u
+        WHERE u.branch_id = b.id AND u.role = 'admin'
+      ) AS admin_count,
+      (
+        SELECT COUNT(*)
+        FROM users u
+        WHERE u.branch_id = b.id AND u.role = 'marketing'
+      ) AS marketing_count,
+      (
+        SELECT COUNT(*)
+        FROM ecards e
+        INNER JOIN users u ON u.id = e.user_id
+        WHERE u.branch_id = b.id
+      ) AS ecard_count
+    FROM branches b
+    INNER JOIN companies c ON c.id = b.company_id
     WHERE b.id = ?`,
     [branchId]
   );
 
-  return rows[0] || null;
+  return mapBranchRow(rows[0]);
 }
 
-async function getUserBaseRowById(userId) {
+export async function createBranch({ companyId, name, address }) {
   const rows = await query(
-    `SELECT
-      u.id,
-      u.username,
-      u.slug,
-      u.password_hash,
-      u.full_name,
-      u.nickname,
-      u.photo,
-      u.job_title,
-      u.license_number,
-      u.description,
-      u.phone,
-      u.email,
-      u.tiktok,
-      u.instagram,
-      u.linkedin,
-      u.whatsapp,
-      u.company_id,
-      c.name AS company_name,
-      u.branch_id,
-      b.name AS branch_name,
-      b.city AS branch_city,
-      u.role_id,
-      r.name AS role_name,
-      u.manager_id,
-      u.is_verified,
-      u.is_active
-    FROM users u
-    LEFT JOIN companies c ON c.id = u.company_id
-    LEFT JOIN branches b ON b.id = u.branch_id
-    LEFT JOIN roles r ON r.id = u.role_id
-    WHERE u.id = ?`,
-    [userId]
-  );
-
-  return rows[0] || null;
-}
-
-export async function listBranches() {
-  const rows = await query(
-    `SELECT
-      b.id,
-      b.company_id,
-      b.name,
-      b.city,
-      (
-        SELECT COUNT(*)
-        FROM users u
-        INNER JOIN roles r ON r.id = u.role_id
-        WHERE u.branch_id = b.id AND r.name = 'admin'
-      ) AS admin_count,
-      (
-        SELECT COUNT(*)
-        FROM users u
-        INNER JOIN roles r ON r.id = u.role_id
-        WHERE u.branch_id = b.id AND r.name = 'marketing'
-      ) AS marketing_count,
-      (
-        SELECT COUNT(*)
-        FROM user_ecards e
-        INNER JOIN users u ON u.id = e.user_id
-        WHERE u.branch_id = b.id
-      ) AS ecard_count
-    FROM branches b
-    ORDER BY b.id ASC`
-  );
-
-  return rows.map(sanitizeBranch);
-}
-
-export async function getBranchById(branchId) {
-  const row = await getBranchRowById(branchId);
-  return sanitizeBranch(row);
-}
-
-export async function getBranchByCode(code) {
-  const rows = await query("SELECT id, company_id, name, city FROM branches WHERE city = ?", [
-    code
-  ]);
-  return sanitizeBranch(rows[0]);
-}
-
-export async function createBranch({ name, city, companyId }) {
-  const rows = await query(
-    "INSERT INTO branches (company_id, name, city) VALUES (?, ?, ?)",
-    [companyId, name, city]
+    "INSERT INTO branches (company_id, name, address) VALUES (?, ?, ?)",
+    [companyId, name, address]
   );
 
   return getBranchById(rows.insertId);
+}
+
+export async function updateBranch(branchId, { companyId, name, address }) {
+  await query(
+    `UPDATE branches
+      SET
+        company_id = ?,
+        name = ?,
+        address = ?
+      WHERE id = ?`,
+    [companyId, name, address, branchId]
+  );
+
+  return getBranchById(branchId);
+}
+
+export async function deleteBranch(branchId) {
+  const result = await query("DELETE FROM branches WHERE id = ?", [branchId]);
+  return result.affectedRows > 0;
 }
 
 export async function getUserByEmail(email) {
   const rows = await query(
     `SELECT
       u.id,
+      u.name,
       u.username,
-      u.slug,
-      u.password_hash,
-      u.full_name,
-      u.nickname,
-      u.photo,
-      u.job_title,
-      u.license_number,
-      u.description,
-      u.phone,
       u.email,
-      u.tiktok,
-      u.instagram,
-      u.linkedin,
-      u.whatsapp,
+      u.password,
+      u.nik,
+      u.license_number,
+      u.real_position,
       u.company_id,
       c.name AS company_name,
       u.branch_id,
       b.name AS branch_name,
-      b.city AS branch_city,
-      u.role_id,
-      r.name AS role_name,
-      u.manager_id
+      b.address AS branch_address,
+      u.role,
+      up.photo_profile,
+      up.display_position,
+      up.description AS profile_description,
+      up.phone_number,
+      up.instagram,
+      up.tiktok,
+      up.twitter,
+      up.linkedin,
+      up.supervisor_user_id,
+      COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
     FROM users u
     LEFT JOIN companies c ON c.id = u.company_id
     LEFT JOIN branches b ON b.id = u.branch_id
-    LEFT JOIN roles r ON r.id = u.role_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
     WHERE u.email = ?`,
     [email.toLowerCase()]
   );
 
-  const row = rows[0];
-
-  if (!row) {
-    return null;
-  }
-
-  return {
-    ...mapUserRow(row),
-    passwordHash: row.password_hash,
-    branchCity: row.branch_city || null
-  };
+  return mapUserRow(rows[0]);
 }
 
 export async function getUserById(id) {
   const row = await getUserBaseRowById(id);
-
-  if (!row) {
-    return null;
-  }
-
-  return {
-    ...mapUserRow(row),
-    passwordHash: row.password_hash,
-    branchCity: row.branch_city || null
-  };
+  return mapUserRow(row);
 }
 
 export async function listUsers(filters = {}) {
@@ -340,7 +594,7 @@ export async function listUsers(filters = {}) {
   const params = [];
 
   if (filters.role) {
-    conditions.push("r.name = ?");
+    conditions.push("u.role = ?");
     params.push(filters.role);
   }
 
@@ -349,76 +603,210 @@ export async function listUsers(filters = {}) {
     params.push(filters.branchId);
   }
 
+  if (filters.companyId) {
+    conditions.push("u.company_id = ?");
+    params.push(filters.companyId);
+  }
+
   const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const rows = await query(
     `SELECT
       u.id,
-      u.full_name,
+      u.name,
+      u.username,
       u.email,
+      u.nik,
+      u.license_number,
+      u.real_position,
       u.company_id,
       c.name AS company_name,
       u.branch_id,
       b.name AS branch_name,
-      u.manager_id,
-      r.name AS role_name
+      b.address AS branch_address,
+      u.role,
+      up.photo_profile,
+      up.display_position,
+      up.description AS profile_description,
+      up.phone_number,
+      up.instagram,
+      up.tiktok,
+      up.twitter,
+      up.linkedin,
+      up.supervisor_user_id,
+      COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
+      ,
+      (
+        SELECT COUNT(*)
+        FROM marketing_certificates mc
+        WHERE mc.user_id = u.id
+      ) AS certificate_count,
+      (
+        SELECT COUNT(*)
+        FROM ecards e
+        WHERE e.user_id = u.id
+      ) AS ecard_count
     FROM users u
     LEFT JOIN companies c ON c.id = u.company_id
     LEFT JOIN branches b ON b.id = u.branch_id
-    LEFT JOIN roles r ON r.id = u.role_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
     ${whereClause}
-    ORDER BY u.id ASC`,
+    ORDER BY u.name ASC, u.id ASC`,
     params
   );
 
-  return rows.map(mapUserRow);
+  return rows.map(mapUserRow).map(sanitizeUser);
 }
 
 export async function createUser({
   name,
+  username,
   email,
   passwordHash,
   role = "marketing",
+  nik = null,
   branchId = null,
-  createdById = null
+  companyId = null,
+  licenseNumber = null,
+  positionTitle = null,
+  supervisorId = null,
+  supervisorName = null
 }) {
-  const roleRow = await getRoleByName(role);
-  const companyId = branchId ? await getCompanyIdFromBranch(branchId) : null;
-  const username = buildUsername(name, email);
-  const slug = slugify(name || username);
+  const normalizedUsername = username?.trim() || buildUsername(name, email);
+  const normalizedEmail = email.toLowerCase().trim();
+  const nextCompanyId = companyId || (branchId ? await getCompanyIdFromBranch(branchId) : null);
+
+  await ensureUsernameAvailable(normalizedUsername);
+  await ensureEmailAvailable(normalizedEmail);
 
   const result = await query(
     `INSERT INTO users (
+      name,
       username,
-      slug,
-      password_hash,
-      full_name,
-      nickname,
-      job_title,
       email,
+      password,
+      nik,
+      license_number,
+      real_position,
       company_id,
       branch_id,
-      role_id,
-      manager_id,
-      is_verified,
-      is_active
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1)`,
+      role
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      username,
-      slug,
-      passwordHash,
       name,
-      name.split(" ")[0],
-      role === "admin" ? "Branch Admin" : "Marketing",
-      email.toLowerCase(),
-      companyId,
+      normalizedUsername,
+      normalizedEmail,
+      passwordHash,
+      nik || null,
+      licenseNumber || null,
+      positionTitle || null,
+      nextCompanyId,
       branchId,
-      roleRow?.id || null,
-      createdById
+      role
     ]
   );
 
-  const user = await getUserById(result.insertId);
-  return sanitizeUser(user);
+  await upsertUserProfile(result.insertId, {
+    ecardJobTitle: positionTitle || null,
+    supervisorId: supervisorId || null,
+    supervisorName: supervisorName || null
+  });
+
+  return sanitizeUser(await getUserById(result.insertId));
+}
+
+export async function updateUser(userId, payload) {
+  const currentUser = mapUserRow(await getUserBaseRowById(userId));
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const normalizedUsername = payload.username?.trim() || currentUser.username;
+  const normalizedEmail = payload.email?.trim().toLowerCase() || currentUser.email;
+  const nextCompanyId =
+    payload.companyId || (payload.branchId ? await getCompanyIdFromBranch(payload.branchId) : null);
+
+  await ensureUsernameAvailable(normalizedUsername, userId);
+  await ensureEmailAvailable(normalizedEmail, userId);
+
+  if (payload.passwordHash) {
+    await query(
+      `UPDATE users
+        SET
+          name = ?,
+          username = ?,
+          email = ?,
+          password = ?,
+          nik = ?,
+          license_number = ?,
+          real_position = ?,
+          company_id = ?,
+          branch_id = ?,
+          role = ?
+        WHERE id = ?`,
+      [
+        payload.name,
+        normalizedUsername,
+        normalizedEmail,
+        payload.passwordHash,
+        payload.nik || null,
+        payload.licenseNumber || null,
+        payload.positionTitle || null,
+        nextCompanyId,
+        payload.branchId || null,
+        payload.role,
+        userId
+      ]
+    );
+  } else {
+    await query(
+      `UPDATE users
+        SET
+          name = ?,
+          username = ?,
+          email = ?,
+          nik = ?,
+          license_number = ?,
+          real_position = ?,
+          company_id = ?,
+          branch_id = ?,
+          role = ?
+        WHERE id = ?`,
+      [
+        payload.name,
+        normalizedUsername,
+        normalizedEmail,
+        payload.nik || null,
+        payload.licenseNumber || null,
+        payload.positionTitle || null,
+        nextCompanyId,
+        payload.branchId || null,
+        payload.role,
+        userId
+      ]
+    );
+  }
+
+  await upsertUserProfile(userId, {
+    photo: currentUser.photo,
+    ecardJobTitle: payload.positionTitle || currentUser.ecardJobTitle || null,
+    description: currentUser.description || null,
+    phone: currentUser.phone || null,
+    instagram: currentUser.instagram || null,
+    tiktok: currentUser.tiktok || null,
+    twitter: currentUser.twitter || null,
+    linkedin: currentUser.linkedin || null,
+    supervisorId: payload.supervisorId ?? null,
+    supervisorName: payload.supervisorName?.trim() || null
+  });
+
+  return sanitizeUser(await getUserById(userId));
+}
+
+export async function deleteUser(userId) {
+  const result = await query("DELETE FROM users WHERE id = ?", [userId]);
+  return result.affectedRows > 0;
 }
 
 export async function verifyPassword(user, plainPassword) {
@@ -428,56 +816,56 @@ export async function verifyPassword(user, plainPassword) {
 export async function getMarketingResources(userId) {
   const [userRow, certificateRows, ecardRows] = await Promise.all([
     getUserBaseRowById(userId),
-    query(
-      "SELECT id, title, issuer, year, image_path FROM user_certificates WHERE user_id = ? ORDER BY id DESC",
-      [userId]
-    ),
-    query(
-      "SELECT id, title, slug, public_url, qr_code_data_url, created_at FROM user_ecards WHERE user_id = ? ORDER BY id DESC",
-      [userId]
-    )
+    query("SELECT id, title, image_url FROM marketing_certificates WHERE user_id = ? ORDER BY id DESC", [
+      userId
+    ]),
+    query("SELECT id, slug, qr_code_url, is_active, created_at FROM ecards WHERE user_id = ? ORDER BY id DESC", [
+      userId
+    ])
   ]);
 
+  const user = mapUserRow(userRow);
   const profile = {
-    username: userRow?.username || "",
-    slug: userRow?.slug || "",
-    fullName: userRow?.full_name || "",
-    nickname: userRow?.nickname || "",
-    photo: userRow?.photo || "",
-    jobTitle: userRow?.job_title || "",
-    licenseNumber: userRow?.license_number || "",
-    description: userRow?.description || "",
-    phone: userRow?.phone || "",
-    email: userRow?.email || "",
-    companyName: userRow?.company_name || "",
-    branchName: userRow?.branch_name || ""
+    fullName: user?.name || "",
+    username: user?.username || "",
+    email: user?.email || "",
+    nik: user?.nik || "",
+    companyName: user?.companyName || "",
+    branchName: user?.branchName || "",
+    branchCode: user?.branchCode || "",
+    licenseNumber: user?.licenseNumber || "",
+    positionTitle: user?.positionTitle || "",
+    photo: user?.photo || "",
+    ecardJobTitle: user?.ecardJobTitle || "",
+    description: user?.description || "",
+    phone: user?.phone || "",
+    instagram: user?.instagram || "",
+    tiktok: user?.tiktok || "",
+    twitter: user?.twitter || "",
+    linkedin: user?.linkedin || "",
+    supervisorName: user?.supervisorName || ""
   };
 
   const biodata = [
+    { id: "fullName", label: "Nama", value: profile.fullName },
     { id: "username", label: "Username", value: profile.username },
-    { id: "slug", label: "Slug", value: profile.slug },
-    { id: "fullName", label: "Nama Lengkap", value: profile.fullName },
-    { id: "nickname", label: "Nama Panggilan", value: profile.nickname },
-    { id: "jobTitle", label: "Jabatan", value: profile.jobTitle },
-    { id: "licenseNumber", label: "Nomor Lisensi", value: profile.licenseNumber },
-    { id: "phone", label: "No. Telepon", value: profile.phone },
     { id: "email", label: "Email", value: profile.email },
+    { id: "nik", label: "NIK", value: profile.nik },
     { id: "companyName", label: "Perusahaan", value: profile.companyName },
     { id: "branchName", label: "Cabang", value: profile.branchName },
+    { id: "positionTitle", label: "Jabatan Asli", value: profile.positionTitle },
+    { id: "ecardJobTitle", label: "Jabatan E-Card", value: profile.ecardJobTitle },
+    { id: "licenseNumber", label: "Nomor Izin", value: profile.licenseNumber },
+    { id: "phone", label: "No. Telepon", value: profile.phone },
+    { id: "supervisorName", label: "Atasan", value: profile.supervisorName },
     { id: "description", label: "Deskripsi", value: profile.description }
-  ].filter((item) => item.value);
+  ].filter((entry) => entry.value);
 
   const socialMedia = [
-    userRow?.instagram ? { id: "instagram", platform: "Instagram", url: userRow.instagram } : null,
-    userRow?.linkedin ? { id: "linkedin", platform: "LinkedIn", url: userRow.linkedin } : null,
-    userRow?.tiktok ? { id: "tiktok", platform: "TikTok", url: userRow.tiktok } : null,
-    userRow?.whatsapp
-      ? {
-          id: "whatsapp",
-          platform: "WhatsApp",
-          url: userRow.whatsapp
-        }
-      : null
+    profile.instagram ? { id: "instagram", platform: "Instagram", url: profile.instagram } : null,
+    profile.tiktok ? { id: "tiktok", platform: "TikTok", url: profile.tiktok } : null,
+    profile.twitter ? { id: "twitter", platform: "Twitter/X", url: profile.twitter } : null,
+    profile.linkedin ? { id: "linkedin", platform: "LinkedIn", url: profile.linkedin } : null
   ].filter(Boolean);
 
   return {
@@ -485,230 +873,374 @@ export async function getMarketingResources(userId) {
     biodata,
     socialMedia,
     certificates: certificateRows.map(mapCertificateEntry),
-    ecards: ecardRows.map(mapEcardEntry)
+    ecards: ecardRows.map((row) => mapEcardEntry(row, user))
   };
 }
 
 export async function updateUserProfile(userId, payload) {
-  const currentUser = await getUserBaseRowById(userId);
-  const username = buildUsername(payload.fullName, payload.email || "");
-  const slug = slugify(payload.slug || payload.fullName || username);
+  const currentUser = mapUserRow(await getUserBaseRowById(userId));
   const nextPhoto =
     payload.photo !== undefined ? payload.photo?.trim() || null : currentUser?.photo || null;
 
-  await query(
-    `UPDATE users
-      SET
-        username = ?,
-        slug = ?,
-        full_name = ?,
-        nickname = ?,
-        photo = ?,
-        job_title = ?,
-        license_number = ?,
-        description = ?,
-        phone = ?,
-        email = ?
-      WHERE id = ?`,
-    [
-      payload.username?.trim() || username,
-      slug,
-      payload.fullName?.trim() || null,
-      payload.nickname?.trim() || null,
-      nextPhoto,
-      payload.jobTitle?.trim() || null,
-      payload.licenseNumber?.trim() || null,
-      payload.description?.trim() || null,
-      payload.phone?.trim() || null,
-      payload.email?.trim().toLowerCase() || null,
-      userId
-    ]
-  );
+  await upsertUserProfile(userId, {
+    photo: nextPhoto,
+    ecardJobTitle: payload.ecardJobTitle?.trim() || null,
+    description: payload.description?.trim() || null,
+    phone: payload.phone?.trim() || null,
+    instagram: payload.instagram?.trim() || null,
+    tiktok: payload.tiktok?.trim() || null,
+    twitter: payload.twitter?.trim() || null,
+    linkedin: payload.linkedin?.trim() || null,
+    supervisorId: currentUser?.supervisorId || null,
+    supervisorName: currentUser?.supervisorName || null
+  });
 
   if (currentUser?.photo && currentUser.photo !== nextPhoto) {
     await removeUploadedFile(currentUser.photo);
   }
 
-  return getUserById(userId);
-}
-
-export async function addSocialMediaEntry(userId, payload) {
-  const platformKey = normalizePlatform(payload.platform);
-
-  if (!platformKey) {
-    throw new Error("Platform social media harus Instagram, LinkedIn, TikTok, atau WhatsApp.");
-  }
-
-  await query(`UPDATE users SET ${platformKey} = ? WHERE id = ?`, [payload.url, userId]);
-
-  return {
-    id: platformKey,
-    platform:
-      platformKey === "instagram"
-        ? "Instagram"
-        : platformKey === "linkedin"
-          ? "LinkedIn"
-          : platformKey === "tiktok"
-            ? "TikTok"
-            : "WhatsApp",
-    url: payload.url
-  };
-}
-
-export async function removeSocialMediaEntry(userId, entryId) {
-  const platformKey = normalizePlatform(entryId);
-
-  if (!platformKey) {
-    return false;
-  }
-
-  const result = await query(`UPDATE users SET ${platformKey} = NULL WHERE id = ?`, [userId]);
-  return result.affectedRows > 0;
+  return sanitizeUser(await getUserById(userId));
 }
 
 export async function addCertificateEntry(userId, payload) {
   const result = await query(
-    "INSERT INTO user_certificates (user_id, title, issuer, year, image_path) VALUES (?, ?, ?, ?, ?)",
-    [userId, payload.title, payload.issuer, payload.year, payload.imagePath || null]
+    "INSERT INTO marketing_certificates (user_id, title, image_url) VALUES (?, ?, ?)",
+    [userId, payload.title, payload.imagePath || "https://example.com/certificates/default-certificate.png"]
   );
 
   return {
     id: String(result.insertId),
     title: payload.title,
-    issuer: payload.issuer,
-    year: payload.year,
-    imagePath: payload.imagePath || null
+    imagePath: payload.imagePath || "https://example.com/certificates/default-certificate.png"
+  };
+}
+
+export async function updateCertificateEntry(userId, entryId, payload) {
+  const currentRows = await query(
+    "SELECT image_url FROM marketing_certificates WHERE id = ? AND user_id = ?",
+    [entryId, userId]
+  );
+
+  if (currentRows.length === 0) {
+    return null;
+  }
+
+  const nextImagePath =
+    payload.imagePath !== undefined
+      ? payload.imagePath || currentRows[0].image_url
+      : currentRows[0].image_url;
+
+  await query(
+    `UPDATE marketing_certificates
+      SET
+        title = ?,
+        image_url = ?
+      WHERE id = ? AND user_id = ?`,
+    [payload.title, nextImagePath, entryId, userId]
+  );
+
+  if (
+    currentRows[0].image_url &&
+    currentRows[0].image_url !== nextImagePath &&
+    currentRows[0].image_url.startsWith("/uploads/")
+  ) {
+    await removeUploadedFile(currentRows[0].image_url);
+  }
+
+  return {
+    id: String(entryId),
+    title: payload.title,
+    imagePath: nextImagePath
   };
 }
 
 export async function removeCertificateEntry(userId, entryId) {
-  const certificateRows = await query(
-    "SELECT image_path FROM user_certificates WHERE id = ? AND user_id = ?",
+  const rows = await query(
+    "SELECT image_url FROM marketing_certificates WHERE id = ? AND user_id = ?",
     [entryId, userId]
   );
-  const result = await query("DELETE FROM user_certificates WHERE id = ? AND user_id = ?", [
+  const result = await query("DELETE FROM marketing_certificates WHERE id = ? AND user_id = ?", [
     entryId,
     userId
   ]);
 
-  if (result.affectedRows > 0 && certificateRows[0]?.image_path) {
-    await removeUploadedFile(certificateRows[0].image_path);
+  if (result.affectedRows > 0 && rows[0]?.image_url?.startsWith("/uploads/")) {
+    await removeUploadedFile(rows[0].image_url);
   }
 
   return result.affectedRows > 0;
 }
 
 export async function createEcardEntry(userId, payload) {
-  const user = await getUserBaseRowById(userId);
-  const slug = slugify(payload.slug || payload.title || user.full_name);
-  const branchCode = branchCodeFromCity(user.branch_city);
-  const publicUrl = `https://ecard.local/${branchCode.toLowerCase()}/${slug}`;
+  const existingRows = await query(
+    "SELECT id, slug, qr_code_url, is_active, created_at FROM ecards WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+    [userId]
+  );
+
+  if (existingRows.length > 0) {
+    throw new Error("Setiap marketing hanya boleh memiliki 1 QR e-card.");
+  }
+
+  const user = mapUserRow(await getUserBaseRowById(userId));
+  const slug = slugify(payload.slug || payload.title || user?.username || user?.name);
+  const publicUrl = buildPublicEcardUrl({
+    ...user,
+    slug
+  });
   const qrCodeDataUrl = await QRCode.toDataURL(publicUrl, {
     margin: 1,
     width: 240
   });
 
   const result = await query(
-    "INSERT INTO user_ecards (user_id, title, slug, public_url, qr_code_data_url) VALUES (?, ?, ?, ?, ?)",
-    [userId, payload.title, slug, publicUrl, qrCodeDataUrl]
+    "INSERT INTO ecards (user_id, slug, qr_code_url, is_active) VALUES (?, ?, ?, ?)",
+    [userId, slug, qrCodeDataUrl, true]
   );
 
   return {
     id: String(result.insertId),
-    title: payload.title,
+    title: `E-Card ${user?.name || slug}`,
     slug,
     publicUrl,
     qrCodeDataUrl,
+    isActive: true,
+    createdAt: new Date().toISOString()
+  };
+}
+
+export async function updateEcardEntry(userId, entryId, payload) {
+  const currentRows = await query("SELECT id FROM ecards WHERE id = ? AND user_id = ? LIMIT 1", [
+    entryId,
+    userId
+  ]);
+
+  if (currentRows.length === 0) {
+    return null;
+  }
+
+  const user = mapUserRow(await getUserBaseRowById(userId));
+  const slug = slugify(payload.slug || payload.title || user?.username || user?.name);
+  const publicUrl = buildPublicEcardUrl({
+    ...user,
+    slug
+  });
+  const qrCodeDataUrl = await QRCode.toDataURL(publicUrl, {
+    margin: 1,
+    width: 240
+  });
+
+  await query(
+    `UPDATE ecards
+      SET
+        slug = ?,
+        qr_code_url = ?,
+        is_active = ?
+      WHERE id = ? AND user_id = ?`,
+    [slug, qrCodeDataUrl, payload.isActive ?? true, entryId, userId]
+  );
+
+  return {
+    id: String(entryId),
+    title: `E-Card ${user?.name || slug}`,
+    slug,
+    publicUrl,
+    qrCodeDataUrl,
+    isActive: payload.isActive ?? true,
     createdAt: new Date().toISOString()
   };
 }
 
 export async function removeEcardEntry(userId, entryId) {
-  const result = await query("DELETE FROM user_ecards WHERE id = ? AND user_id = ?", [
-    entryId,
-    userId
-  ]);
+  const result = await query("DELETE FROM ecards WHERE id = ? AND user_id = ?", [entryId, userId]);
   return result.affectedRows > 0;
+}
+
+export async function getPublicEcardByRoute({ companySlug, branchCode, ecardSlug }) {
+  const normalizedSlug = slugify(ecardSlug);
+  const normalizedCompanySlug = slugify(companySlug);
+  const normalizedBranchCode = branchCodeFromName(branchCode).toLowerCase();
+  const rows = await query(
+    `SELECT
+      e.id,
+      e.slug,
+      e.is_active,
+      e.created_at,
+      u.id AS user_id,
+      u.name AS user_name,
+      u.email,
+      u.nik,
+      u.license_number,
+      u.real_position,
+      c.name AS company_name,
+      c.description AS company_description,
+      c.video_url AS company_video_url,
+      b.name AS branch_name,
+      b.address AS branch_address,
+      up.photo_profile,
+      up.display_position,
+      up.description AS profile_description,
+      up.phone_number,
+      up.instagram,
+      up.tiktok,
+      up.twitter,
+      up.linkedin,
+      COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
+    FROM ecards e
+    INNER JOIN users u ON u.id = e.user_id
+    LEFT JOIN companies c ON c.id = u.company_id
+    LEFT JOIN branches b ON b.id = u.branch_id
+    LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
+    WHERE e.slug = ?
+      AND e.is_active = TRUE
+    LIMIT 1`,
+    [normalizedSlug]
+  );
+  const row = rows[0];
+
+  if (!row) {
+    return null;
+  }
+
+  if (slugify(row.company_name) !== normalizedCompanySlug) {
+    return null;
+  }
+
+  if (branchCodeFromName(row.branch_name).toLowerCase() !== normalizedBranchCode) {
+    return null;
+  }
+
+  const certificateRows = await query(
+    `SELECT id, title, image_url
+      FROM marketing_certificates
+      WHERE user_id = ?
+      ORDER BY id DESC`,
+    [row.user_id]
+  );
+
+  const profile = {
+    name: row.user_name || "",
+    email: row.email || "",
+    nik: row.nik || "",
+    photo: row.photo_profile || "",
+    ecardJobTitle: row.display_position || row.real_position || "",
+    positionTitle: row.real_position || "",
+    description: row.profile_description || "",
+    phone: row.phone_number || "",
+    licenseNumber: row.license_number || "",
+    supervisorName: row.supervisor_name || ""
+  };
+
+  return {
+    id: String(row.id),
+    slug: row.slug,
+    publicUrl: buildPublicEcardUrl({
+      companyName: row.company_name,
+      branchName: row.branch_name,
+      slug: row.slug
+    }),
+    isActive: Boolean(row.is_active),
+    createdAt: row.created_at,
+    company: {
+      name: row.company_name || "",
+      description: row.company_description || "",
+      videoUrl: row.company_video_url || ""
+    },
+    branch: {
+      name: row.branch_name || "",
+      code: branchCodeFromName(row.branch_name || ""),
+      address: row.branch_address || ""
+    },
+    profile,
+    socialMedia: [
+      profile.phone ? { id: "phone", label: "Telepon", url: `tel:${profile.phone}`, value: profile.phone } : null,
+      profile.email ? { id: "email", label: "Email", url: `mailto:${profile.email}`, value: profile.email } : null,
+      row.instagram ? { id: "instagram", label: "Instagram", url: row.instagram, value: row.instagram } : null,
+      row.tiktok ? { id: "tiktok", label: "TikTok", url: row.tiktok, value: row.tiktok } : null,
+      row.twitter ? { id: "twitter", label: "Twitter/X", url: row.twitter, value: row.twitter } : null,
+      row.linkedin ? { id: "linkedin", label: "LinkedIn", url: row.linkedin, value: row.linkedin } : null
+    ].filter(Boolean),
+    certificates: certificateRows.map(mapCertificateEntry)
+  };
 }
 
 export async function getDashboardData(actor) {
   if (actor.role === "superadmin") {
-    const [branches, admins, marketingTeam, statsRows] = await Promise.all([
+    const [companies, branches, admins, marketingTeam, certificates, ecards, statsRows] = await Promise.all([
+      listCompanies(),
       listBranches(),
       listUsers({ role: "admin" }),
       listUsers({ role: "marketing" }),
+      listCertificates(),
+      listEcards(),
       query(
         `SELECT
+          (SELECT COUNT(*) FROM companies) AS total_companies,
           (SELECT COUNT(*) FROM branches) AS total_branches,
-          (
-            SELECT COUNT(*)
-            FROM users u
-            INNER JOIN roles r ON r.id = u.role_id
-            WHERE r.name = 'admin'
-          ) AS total_admins,
-          (
-            SELECT COUNT(*)
-            FROM users u
-            INNER JOIN roles r ON r.id = u.role_id
-            WHERE r.name = 'marketing'
-          ) AS total_marketing,
-          (SELECT COUNT(*) FROM user_ecards) AS total_ecards`
+          (SELECT COUNT(*) FROM users WHERE role = 'admin') AS total_admins,
+          (SELECT COUNT(*) FROM users WHERE role = 'marketing') AS total_marketing,
+          (SELECT COUNT(*) FROM user_profiles) AS total_profiles,
+          (SELECT COUNT(*) FROM marketing_certificates) AS total_certificates,
+          (SELECT COUNT(*) FROM ecards) AS total_ecards`
       )
     ]);
 
     return {
       role: actor.role,
+      companies,
+      branches,
+      admins,
+      marketingTeam,
+      certificates,
+      ecards,
       stats: {
+        totalCompanies: Number(statsRows[0].total_companies || 0),
         totalBranches: Number(statsRows[0].total_branches || 0),
         totalAdmins: Number(statsRows[0].total_admins || 0),
         totalMarketing: Number(statsRows[0].total_marketing || 0),
+        totalProfiles: Number(statsRows[0].total_profiles || 0),
+        totalCertificates: Number(statsRows[0].total_certificates || 0),
         totalEcards: Number(statsRows[0].total_ecards || 0)
-      },
-      branches,
-      admins,
-      marketingTeam
+      }
     };
   }
 
   if (actor.role === "admin") {
-    const [branch, marketingTeam, statsRows] = await Promise.all([
+    const [branch, marketingTeam, certificates, ecards, statsRows] = await Promise.all([
       getBranchById(actor.branchId),
-      listUsers({ role: "marketing", branchId: actor.branchId }),
+      listUsers({ role: "marketing", companyId: actor.companyId, branchId: actor.branchId }),
+      listCertificates({ companyId: actor.companyId, branchId: actor.branchId }),
+      listEcards({ companyId: actor.companyId, branchId: actor.branchId }),
       query(
         `SELECT
+          (SELECT COUNT(*) FROM users WHERE role = 'marketing' AND company_id = ? AND branch_id = ?) AS total_marketing,
           (
             SELECT COUNT(*)
-            FROM users u
-            INNER JOIN roles r ON r.id = u.role_id
-            WHERE r.name = 'marketing' AND u.branch_id = ?
-          ) AS total_marketing,
-          (
-            SELECT COUNT(*)
-            FROM user_certificates c
+            FROM marketing_certificates c
             INNER JOIN users u ON u.id = c.user_id
-            INNER JOIN roles r ON r.id = u.role_id
-            WHERE r.name = 'marketing' AND u.branch_id = ?
+            WHERE u.role = 'marketing' AND u.company_id = ? AND u.branch_id = ?
           ) AS total_certificates,
           (
             SELECT COUNT(*)
-            FROM user_ecards e
+            FROM ecards e
             INNER JOIN users u ON u.id = e.user_id
-            INNER JOIN roles r ON r.id = u.role_id
-            WHERE r.name = 'marketing' AND u.branch_id = ?
+            WHERE u.role = 'marketing' AND u.company_id = ? AND u.branch_id = ?
           ) AS total_ecards`,
-        [actor.branchId, actor.branchId, actor.branchId]
+        [actor.companyId, actor.branchId, actor.companyId, actor.branchId, actor.companyId, actor.branchId]
       )
     ]);
 
     return {
       role: actor.role,
       branch,
+      marketingTeam,
+      certificates,
+      ecards,
       stats: {
         totalMarketing: Number(statsRows[0].total_marketing || 0),
         totalCertificates: Number(statsRows[0].total_certificates || 0),
         totalEcards: Number(statsRows[0].total_ecards || 0)
-      },
-      marketingTeam
+      }
     };
   }
 
@@ -716,12 +1248,12 @@ export async function getDashboardData(actor) {
 
   return {
     role: actor.role,
+    resources,
     stats: {
       biodataCount: resources.biodata.length,
       socialMediaCount: resources.socialMedia.length,
       certificateCount: resources.certificates.length,
       ecardCount: resources.ecards.length
-    },
-    resources
+    }
   };
 }

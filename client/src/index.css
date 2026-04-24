@@ -1,10 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --font-sans: "Aptos", "Trebuchet MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 @layer base {
+  :root {
+    --page-cream: #f7f1e7;
+    --page-cream-deep: #eadbc8;
+    --paper: rgba(255, 252, 246, 0.88);
+    --paper-strong: rgba(255, 252, 246, 0.96);
+    --ink: #122235;
+    --ink-soft: #4e6174;
+    --line: rgba(44, 69, 90, 0.12);
+    --teal: #16697a;
+    --teal-deep: #114b5f;
+    --amber: #d97706;
+    --mint: #d9f4ea;
+  }
+
   html {
     font-family: var(--font-sans);
   }
@@ -13,10 +27,11 @@
     min-width: 320px;
     min-height: 100vh;
     background:
-      radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
-      radial-gradient(circle at right 20%, rgba(34, 197, 94, 0.12), transparent 30%),
-      linear-gradient(160deg, #020617 0%, #0f172a 45%, #082f49 100%);
-    color: #e2e8f0;
+      radial-gradient(circle at top left, rgba(245, 158, 11, 0.14), transparent 26%),
+      radial-gradient(circle at right 12%, rgba(22, 105, 122, 0.12), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(34, 197, 94, 0.08), transparent 24%),
+      linear-gradient(180deg, #fbf7ef 0%, #f5ede0 52%, #efe3d0 100%);
+    color: var(--ink);
   }
 
   #root {
@@ -28,5 +43,24 @@
   select,
   textarea {
     font: inherit;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(17, 75, 95, 0.35) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background: rgba(17, 75, 95, 0.28);
   }
 }

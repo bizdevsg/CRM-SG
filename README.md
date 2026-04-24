@@ -60,6 +60,28 @@ MYSQL_PASSWORD=
 MYSQL_DATABASE=ecard_platform_db
 ```
 
+## Tunneling dan Scan QR
+
+Supaya QR bisa discan dari HP saat development:
+
+1. Jalankan frontend dan backend seperti biasa.
+2. Buat tunnel ke frontend Vite, misalnya `http://localhost:5173`.
+3. Isi `CLIENT_URL` di `server/.env` dengan URL tunnel frontend, misalnya:
+
+```env
+CLIENT_URL=https://namatunnel-anda.ngrok-free.app
+```
+
+4. Restart backend setelah `CLIENT_URL` berubah.
+
+Catatan penting:
+
+- QR e-card memakai `CLIENT_URL` sebagai link publik.
+- Saat backend start ulang, QR yang sudah ada akan diregenerate mengikuti `CLIENT_URL` terbaru.
+- Vite sudah diset `host 0.0.0.0` agar mudah dipublish lewat tunnel.
+- Backend CORS mengizinkan `CLIENT_URL`, `localhost:5173`, dan `127.0.0.1:5173`.
+- Satu marketing sekarang hanya memiliki 1 QR e-card.
+
 ## Aktivitas Role
 
 - `superadmin` mengelola seluruh resource, cabang, admin, dan marketing

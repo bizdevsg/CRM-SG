@@ -4,11 +4,10 @@ export default function Input({ className, ...props }) {
   return (
     <input
       className={cn(
-        "w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white",
+        "w-full rounded-2xl border border-[color:var(--line)] bg-white/80 px-4 py-3 text-sm text-[color:var(--ink)] outline-none transition placeholder:text-[color:var(--ink-soft)]/70 focus:border-[color:var(--teal)] focus:bg-white focus:shadow-[0_0_0_4px_rgba(22,105,122,0.08)] disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-slate-500",
         className
       )}
       {...props}
     />
   );
 }
-

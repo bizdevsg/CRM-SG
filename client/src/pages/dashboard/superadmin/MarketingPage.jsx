@@ -10,7 +10,7 @@ export default function MarketingPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Marketing</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Daftar seluruh marketing dari semua cabang.
+          Daftar seluruh marketing dari semua PT beserta cabang dan atasannya.
         </p>
       </div>
 
@@ -22,11 +22,15 @@ export default function MarketingPage() {
           <ResourceRow>
             <strong className="text-base text-slate-900">{marketing.name}</strong>
             <span>{marketing.email}</span>
+            <span>{marketing.companyName}</span>
             <span>{marketing.branchName}</span>
+            <span>Profile: {marketing.ecardJobTitle || marketing.positionTitle || "-"}</span>
+            <span>Sertifikat: {marketing.certificateCount ?? 0}</span>
+            <span>E-Card: {marketing.ecardCount ?? 0}</span>
+            <span>Atasan: {marketing.supervisorName || "-"}</span>
           </ResourceRow>
         )}
       />
     </div>
   );
 }
-

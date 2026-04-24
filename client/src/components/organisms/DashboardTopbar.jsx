@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { findMenuItemByPath, getRoleDashboardConfig } from "../../config/dashboardNavigation";
+import {
+  findMenuItemByPath,
+  getRoleDashboardConfig,
+} from "../../config/dashboardNavigation";
 import Button from "../atoms/Button";
+import Icon from "../atoms/Icon";
 
-export default function DashboardTopbar({ user, onRefresh, onLogout }) {
+export default function DashboardTopbar({
+  user,
+  onRefresh,
+  onLogout,
+  onOpenSidebar,
+}) {
   const location = useLocation();
   const [clock, setClock] = useState(() => new Date());
   const config = getRoleDashboardConfig(user?.role);
@@ -18,38 +27,31 @@ export default function DashboardTopbar({ user, onRefresh, onLogout }) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-6 py-5 backdrop-blur lg:px-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{currentMenu?.label || config.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{config.subtitle}</p>
+    <header className="sticky top-0 z-20 border-b border-[color:var(--line)] bg-[rgba(251,247,239,0.86)] px-5 py-3.5 backdrop-blur-xl sm:px-6 lg:px-8">
+      <div className="flex gap-5 items-center justify-between">
+        <div className="flex items-start gap-3">
+          <Button
+            variant="secondary"
+            className="px-3 py-3 lg:hidden"
+            onClick={onOpenSidebar}
+            aria-label="Buka sidebar"
+          >
+            <Icon name="menu" className="h-5 w-5" />
+          </Button>
+          <div className="hidden md:block">
+            <h1 className="text-2xl font-black tracking-[-0.03em] text-[color:var(--ink)]">
+              {currentMenu?.label || config.title}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--ink-soft)]">
+              {config.subtitle}
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <p className="text-right text-sm font-semibold text-slate-700">
-            {clock.toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit"
-            })}
-          </p>
-          <p className="text-right text-sm text-slate-500">
-            {clock.toLocaleDateString("id-ID", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric"
-            })}
-          </p>
-          <Button variant="secondary" onClick={onRefresh}>
-            Refresh
-          </Button>
-          <Button variant="ghost" onClick={onLogout}>
-            Logout
-          </Button>
-        </div>
+        <Button variant="ghost" onClick={onLogout}>
+          Logout
+        </Button>
       </div>
     </header>
   );
 }
-
