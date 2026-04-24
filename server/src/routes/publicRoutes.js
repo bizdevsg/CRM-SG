@@ -3,7 +3,7 @@ import { getPublicEcardByRoute } from "../data/userStore.js";
 
 const router = Router();
 
-router.get("/ecards/:companySlug/:branchCode/:ecardSlug", async (req, res) => {
+async function sendPublicEcard(req, res) {
   const ecard = await getPublicEcardByRoute(req.params);
 
   if (!ecard) {
@@ -16,6 +16,9 @@ router.get("/ecards/:companySlug/:branchCode/:ecardSlug", async (req, res) => {
     message: "Data e-card publik berhasil diambil.",
     ecard
   });
-});
+}
+
+router.get("/ecards/:ecardSlug", sendPublicEcard);
+router.get("/ecards/:companySlug/:branchCode/:ecardSlug", sendPublicEcard);
 
 export default router;

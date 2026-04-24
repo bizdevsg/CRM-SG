@@ -8,8 +8,8 @@ function slugify(value) {
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
+    .slice(0, 120)
+    .replace(/^-+|-+$/g, "");
 }
 
 function branchCodeFromName(value) {
@@ -17,8 +17,8 @@ function branchCodeFromName(value) {
     .toUpperCase()
     .trim()
     .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 24);
+    .slice(0, 24)
+    .replace(/^-+|-+$/g, "");
 }
 
 function buildUsername(name, email) {
@@ -37,9 +37,7 @@ function getClientBaseUrl() {
 }
 
 export function buildPublicEcardUrl(user) {
-  const companySegment = slugify(user.companyName || "company");
-  const branchSegment = branchCodeFromName(user.branchName || "branch").toLowerCase();
-  return `${getClientBaseUrl()}/${companySegment}/${branchSegment}/${user.slug}`;
+  return `${getClientBaseUrl()}/marketing/${user.slug}`;
 }
 
 function mapCompanyRow(row) {
@@ -1055,10 +1053,13 @@ export async function removeEcardEntry(userId, entryId) {
   return result.affectedRows > 0;
 }
 
-export async function getPublicEcardByRoute({ companySlug, branchCode, ecardSlug }) {
-  const normalizedSlug = slugify(ecardSlug);
-  const normalizedCompanySlug = slugify(companySlug);
-  const normalizedBranchCode = branchCodeFromName(branchCode).toLowerCase();
+export async function getPublicEcardByRoute({ ecardSlug, slug }) {
+  const normalizedSlug = slugify(ecardSlug || slug);
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
   const rows = await query(
     `SELECT
       e.id,
@@ -1071,6 +1072,7 @@ export async function getPublicEcardByRoute({ companySlug, branchCode, ecardSlug
       u.nik,
       u.license_number,
       u.real_position,
+      c.id AS company_id,
       c.name AS company_name,
       c.description AS company_description,
       c.video_url AS company_video_url,
@@ -1099,14 +1101,6 @@ export async function getPublicEcardByRoute({ companySlug, branchCode, ecardSlug
   const row = rows[0];
 
   if (!row) {
-    return null;
-  }
-
-  if (slugify(row.company_name) !== normalizedCompanySlug) {
-    return null;
-  }
-
-  if (branchCodeFromName(row.branch_name).toLowerCase() !== normalizedBranchCode) {
     return null;
   }
 
@@ -1142,6 +1136,7 @@ export async function getPublicEcardByRoute({ companySlug, branchCode, ecardSlug
     isActive: Boolean(row.is_active),
     createdAt: row.created_at,
     company: {
+      id: row.company_id ? Number(row.company_id) : null,
       name: row.company_name || "",
       description: row.company_description || "",
       videoUrl: row.company_video_url || ""

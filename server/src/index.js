@@ -63,7 +63,7 @@ app.get("/", (_req, res) => {
       dashboard: "/api/users/dashboard-data",
       management: "/api/management/users",
       marketingResources: "/api/marketing/me/resources",
-      publicEcard: "/api/public/ecards/:companySlug/:branchCode/:ecardSlug",
+      publicEcard: "/api/public/ecards/:ecardSlug",
       database: {
         host: getMysqlConfig().host,
         port: getMysqlConfig().port,
@@ -85,7 +85,7 @@ app.get("/api", (_req, res) => {
       dashboard: "/api/users/dashboard-data",
       management: "/api/management/users",
       marketingResources: "/api/marketing/me/resources",
-      publicEcard: "/api/public/ecards/:companySlug/:branchCode/:ecardSlug"
+      publicEcard: "/api/public/ecards/:ecardSlug"
     }
   });
 });

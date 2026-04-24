@@ -52,6 +52,7 @@ export default function App() {
           </GuestRoute>
         }
       />
+      <Route path="/marketing/:marketingSlug" element={<PublicEcardPage />} />
       <Route path="/:companySlug/:branchCode/:ecardSlug" element={<PublicEcardPage />} />
       <Route
         path="/dashboard"

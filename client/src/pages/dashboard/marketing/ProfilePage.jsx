@@ -8,6 +8,50 @@ import ResourceRow from "../../../components/molecules/ResourceRow";
 import { useDashboard } from "../../../context/DashboardContext";
 import { JOB_TITLE_OPTIONS } from "../../../config/jobTitles";
 
+async function readImageDimensions(fileUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve({ width: image.width, height: image.height });
+    image.onerror = () => reject(new Error("Gambar tidak bisa dibaca."));
+    image.src = fileUrl;
+  });
+}
+
+async function hasTransparentPixels(fileUrl, width, height) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+
+      if (!context) {
+        reject(new Error("Validasi gambar tidak tersedia di browser ini."));
+        return;
+      }
+
+      context.drawImage(image, 0, 0, width, height);
+
+      const { data } = context.getImageData(0, 0, width, height);
+
+      for (let index = 3; index < data.length; index += 4) {
+        if (data[index] < 255) {
+          resolve(true);
+          return;
+        }
+      }
+
+      resolve(false);
+    };
+
+    image.onerror = () => reject(new Error("Gambar tidak bisa dibaca."));
+    image.src = fileUrl;
+  });
+}
+
 export default function ProfilePage() {
   const { dashboard, updateProfile } = useDashboard();
   const [profileForm, setProfileForm] = useState({
@@ -91,17 +135,12 @@ export default function ProfilePage() {
       event.target.value = "";
       setPhotoFile(null);
       setPhotoPreview(profileForm.photo || "");
-      setPhotoError("Photo profile harus file PNG transparan dengan rasio 1:1.");
+      setPhotoError("Photo profile harus file PNG transparan dengan rasio potret 3:4.");
       return;
     }
 
     const objectUrl = URL.createObjectURL(file);
-    const dimensions = await new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve({ width: image.width, height: image.height });
-      image.onerror = () => reject(new Error("Gambar tidak bisa dibaca."));
-      image.src = objectUrl;
-    }).catch((error) => {
+    const dimensions = await readImageDimensions(objectUrl).catch((error) => {
       setPhotoError(error.message);
       return null;
     });
@@ -114,12 +153,47 @@ export default function ProfilePage() {
       return;
     }
 
-    if (dimensions.width !== dimensions.height) {
+    if (dimensions.height <= dimensions.width) {
       URL.revokeObjectURL(objectUrl);
       event.target.value = "";
       setPhotoFile(null);
       setPhotoPreview(profileForm.photo || "");
-      setPhotoError("Photo profile harus memiliki rasio 1:1.");
+      setPhotoError("Photo profile harus potret dengan rasio 3:4.");
+      return;
+    }
+
+    if (Math.abs(dimensions.width / dimensions.height - 3 / 4) > 0.01) {
+      URL.revokeObjectURL(objectUrl);
+      event.target.value = "";
+      setPhotoFile(null);
+      setPhotoPreview(profileForm.photo || "");
+      setPhotoError("Photo profile harus potret dengan rasio 3:4.");
+      return;
+    }
+
+    const transparent = await hasTransparentPixels(
+      objectUrl,
+      dimensions.width,
+      dimensions.height
+    ).catch((error) => {
+      setPhotoError(error.message);
+      return null;
+    });
+
+    if (transparent === null) {
+      URL.revokeObjectURL(objectUrl);
+      event.target.value = "";
+      setPhotoFile(null);
+      setPhotoPreview(profileForm.photo || "");
+      return;
+    }
+
+    if (!transparent) {
+      URL.revokeObjectURL(objectUrl);
+      event.target.value = "";
+      setPhotoFile(null);
+      setPhotoPreview(profileForm.photo || "");
+      setPhotoError("Photo profile harus PNG background transparan.");
       return;
     }
 
@@ -246,7 +320,7 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-700">Photo Profile</p>
               <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-center">
-                <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-3xl bg-slate-200">
+                <div className="flex h-32 w-24 items-center justify-center overflow-hidden rounded-3xl bg-slate-200">
                   {photoPreview ? (
                     <img src={photoPreview} alt="Preview profile" className="h-full w-full object-cover" />
                   ) : (
@@ -263,7 +337,7 @@ export default function ProfilePage() {
                       Hapus Foto
                     </Button>
                     <p className="text-xs leading-5 text-slate-500">
-                      Wajib PNG background transparan dengan rasio 1:1. Maksimal 5MB.
+                      Wajib PNG background transparan dengan rasio potret 3:4. Maksimal 5MB.
                     </p>
                   </div>
                 </div>

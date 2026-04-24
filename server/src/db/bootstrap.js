@@ -10,8 +10,8 @@ function slugify(value) {
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 120);
+    .slice(0, 120)
+    .replace(/^-+|-+$/g, "");
 }
 
 function branchCodeFromName(value) {
@@ -19,8 +19,8 @@ function branchCodeFromName(value) {
     .toUpperCase()
     .trim()
     .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 24);
+    .slice(0, 24)
+    .replace(/^-+|-+$/g, "");
 }
 
 const companySeedData = [
