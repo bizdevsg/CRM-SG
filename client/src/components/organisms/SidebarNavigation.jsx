@@ -31,11 +31,11 @@ export default function SidebarNavigation({ user, isOpen = false, onClose }) {
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
-        <div className="flex h-full flex-col border-r border-[color:var(--line)] bg-[linear-gradient(180deg,rgba(255,252,246,0.98)_0%,rgba(244,236,221,0.95)_100%)] shadow-[0_24px_60px_rgba(64,47,18,0.14)] lg:shadow-none">
+        <div className="flex h-full flex-col border-r border-[color:var(--line)] bg-[rgba(255,255,255,0.94)] shadow-[0_24px_60px_rgba(16,32,51,0.08)] backdrop-blur-xl lg:shadow-none">
           <div className="border-b border-[color:var(--line)] px-5 py-6">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,var(--teal-deep),var(--teal))] text-white shadow-[0_12px_24px_rgba(17,75,95,0.22)]">
+                <div className="flex h-12 w-12 items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,var(--teal-deep),var(--teal))] text-white shadow-[0_14px_28px_rgba(23,58,122,0.22)]">
                   <Icon name="dashboard" className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">

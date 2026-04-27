@@ -20,6 +20,7 @@ import EcardEditPage from "./pages/dashboard/marketing/EcardEditPage";
 import ProfilePage from "./pages/dashboard/marketing/ProfilePage";
 import BranchesPage from "./pages/dashboard/superadmin/BranchesPage";
 import MarketingPage from "./pages/dashboard/superadmin/MarketingPage";
+import MarketingCreatePage from "./pages/dashboard/superadmin/MarketingCreatePage";
 import UserCreatePage from "./pages/dashboard/superadmin/UserCreatePage";
 import UserEditPage from "./pages/dashboard/superadmin/UserEditPage";
 import UsersPage from "./pages/dashboard/superadmin/UsersPage";
@@ -118,6 +119,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["superadmin"]}>
               <MarketingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="marketing/new"
+          element={
+            <ProtectedRoute allowedRoles={["superadmin"]}>
+              <MarketingCreatePage />
             </ProtectedRoute>
           }
         />

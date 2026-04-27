@@ -32,10 +32,11 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-transparent text-[color:var(--ink)]">
-      <div className="pointer-events-none fixed inset-0 opacity-80">
-        <div className="absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,rgba(22,105,122,0.14),transparent_60%)]" />
-        <div className="absolute right-0 top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.16),transparent_68%)] blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(34,197,94,0.09),transparent_68%)] blur-3xl" />
+      <div className="pointer-events-none fixed inset-0 opacity-100">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(255,255,255,0.92))]" />
+        <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,rgba(47,111,237,0.12),transparent_60%)]" />
+        <div className="absolute right-[-5rem] top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.12),transparent_68%)] blur-3xl" />
+        <div className="absolute left-[-5rem] top-48 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(52,211,153,0.08),transparent_68%)] blur-3xl" />
       </div>
       <div className="flex min-h-screen flex-col lg:flex-row">
         <SidebarNavigation
@@ -52,7 +53,7 @@ export default function DashboardLayout() {
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <div className="space-y-8 px-5 py-5 sm:px-6 lg:px-8 lg:py-8">
+          <div className="relative space-y-8 px-5 py-5 sm:px-6 lg:px-8 lg:py-8">
             <StatusAlert error={feedback.error} success={feedback.success} />
             <Outlet />
           </div>

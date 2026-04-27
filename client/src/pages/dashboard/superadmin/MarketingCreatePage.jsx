@@ -3,7 +3,7 @@ import Card from "../../../components/atoms/Card";
 import ManagedUserForm from "../../../components/organisms/ManagedUserForm";
 import { useDashboard } from "../../../context/DashboardContext";
 
-export default function UserCreatePage() {
+export default function MarketingCreatePage() {
   const { dashboard, createManagedUser } = useDashboard();
   const navigate = useNavigate();
 
@@ -11,16 +11,16 @@ export default function UserCreatePage() {
     const success = await createManagedUser(payload);
 
     if (success) {
-      navigate("/dashboard/users");
+      navigate("/dashboard/marketing");
     }
   }
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Tambah Admin</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Tambah Marketing</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Buat akun admin cabang baru untuk PT dan cabang tertentu.
+          Buat akun marketing baru untuk PT dan cabang tertentu.
         </p>
       </div>
 
@@ -43,8 +43,8 @@ export default function UserCreatePage() {
             supervisorId: ""
           }}
           onSubmit={handleSubmit}
-          submitLabel="Simpan Admin"
-          fixedRole="admin"
+          submitLabel="Simpan Marketing"
+          fixedRole="marketing"
         />
       </Card>
     </div>

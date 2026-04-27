@@ -45,13 +45,13 @@ export default function EcardsPage() {
         )}
         renderItem={(ecard) => (
           <ResourceRow>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <img
-                className="mb-3 rounded-3xl bg-white p-3 h-50 w-50"
+                className="h-32 w-32 rounded-3xl border border-[color:var(--line)] bg-white p-3 shadow-[0_12px_24px_rgba(16,32,51,0.05)]"
                 src={ecard.qrCodeDataUrl}
                 alt={`QR Code ${ecard.title}`}
               />
-              <div className="flex flex-col">
+              <div className="flex flex-col gap-1">
                 <strong className="text-base text-slate-900">
                   {ecard.title}
                 </strong>

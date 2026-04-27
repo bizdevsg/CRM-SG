@@ -4,7 +4,7 @@ import Icon from "../atoms/Icon";
 export default function SummaryCard({ label, value, description, icon, tint }) {
   return (
     <Card className="relative overflow-hidden p-5">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,rgba(22,105,122,0.14),transparent_65%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,rgba(47,111,237,0.12),transparent_65%)]" />
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--ink-soft)]">

@@ -5,7 +5,6 @@ import {
   faDownload,
   faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
-import riffanBg from "../../assets/RFB BCG 1.png";
 import verifiedBadge from "../../assets/ic_round-verified.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
 import MediaPlaceholder from "../../assets/MediaPlaceholder.png";
@@ -66,7 +65,32 @@ function getSocialMediaDisplayValue(value) {
     .replace(/\/+$/g, "");
 }
 
-export default function RfbContainer({
+const DEFAULT_THEME = {
+  pageClassName: "bg-white",
+  navActiveClass:
+    "bg-red-900 text-white shadow-[0_14px_28px_rgba(127,29,29,0.28)]",
+  navInactiveClass: "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700",
+  logoFallbackClass: "bg-slate-900 text-white",
+  heroStyle: {
+    backgroundImage:
+      "linear-gradient(140deg, rgba(127,29,29,0.18) 0%, rgba(255,255,255,0.92) 38%, rgba(254,242,242,0.96) 100%)",
+  },
+  headlineColorClass: "text-red-900",
+  primaryButtonClass: "bg-red-600 text-white",
+  secondaryButtonClass: "border-zinc-300 text-red-800",
+  infoCardClass: "border-red-300 bg-red-100",
+  legalitySectionClass: "bg-zinc-200",
+  verifiedPillClass: "border-green-400 bg-green-200 text-green-800",
+  corporateHeadingClass: "text-red-800",
+  statsNumberClass: "text-red-800",
+  socialSectionClass: "bg-linear-to-r from-red-800 to-red-700",
+  socialItemClass: "border-red-200/50 bg-red-100/20 text-white",
+  antiFraudCardClass: "border-red-200 bg-red-50",
+  antiFraudTitleClass: "text-red-900",
+};
+
+export default function CompanyEcardContainer({
+  theme = DEFAULT_THEME,
   activeSection,
   sectionNavItems,
   onSectionNavigate,
@@ -85,10 +109,14 @@ export default function RfbContainer({
   corporateStats,
   socialMediaItems,
 }) {
+  const resolvedTheme = {
+    ...DEFAULT_THEME,
+    ...theme,
+  };
+
   return (
     <div
-      data-company-theme="riffan"
-      className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-white"
+      className={`relative mx-auto min-h-screen max-w-md overflow-x-hidden ${resolvedTheme.pageClassName}`}
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
         <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
@@ -104,8 +132,8 @@ export default function RfbContainer({
                   aria-current={isActive ? "true" : "false"}
                   className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-all duration-200 ${
                     isActive
-                      ? "bg-red-900 text-white shadow-[0_14px_28px_rgba(127,29,29,0.28)]"
-                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                      ? resolvedTheme.navActiveClass
+                      : resolvedTheme.navInactiveClass
                   }`}
                 >
                   <FontAwesomeIcon
@@ -137,7 +165,9 @@ export default function RfbContainer({
                   alt={company?.name || "Company logo"}
                 />
               ) : (
-                <div className="inline-flex min-h-14 min-w-14 items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-bold tracking-[0.18em] text-white">
+                <div
+                  className={`inline-flex min-h-14 min-w-14 items-center justify-center rounded-2xl px-4 text-sm font-bold tracking-[0.18em] ${resolvedTheme.logoFallbackClass}`}
+                >
                   {companyBrand.shortName}
                 </div>
               )}
@@ -146,7 +176,7 @@ export default function RfbContainer({
 
           <div
             className="relative min-h-[520px] overflow-hidden rounded-xl bg-white bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${riffanBg})` }}
+            style={resolvedTheme.heroStyle}
           >
             <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center md:justify-end">
               {profile?.photo ? (
@@ -175,7 +205,7 @@ export default function RfbContainer({
                   />
                 </div>
               </div>
-              <div className="text-red-900">
+              <div className={resolvedTheme.headlineColorClass}>
                 <p className="md:text-lg">{headline}</p>
                 <p className="text-lg font-bold">
                   {profile?.licenseNumber || "Nomor Izin"}
@@ -190,7 +220,7 @@ export default function RfbContainer({
               onClick={
                 companyVideoUrl ? undefined : (event) => event.preventDefault()
               }
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white"
+              className={`inline-flex w-full items-center justify-center gap-3 rounded-xl px-7 py-2 ${resolvedTheme.primaryButtonClass}`}
               {...renderLinkTarget(companyVideoUrl)}
             >
               <FontAwesomeIcon icon={faDownload} className="text-2xl" />
@@ -202,7 +232,7 @@ export default function RfbContainer({
             <a
               href={vcardHref}
               download={`${vcardName || "contact"}.vcf`}
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 px-5 py-2 text-red-800"
+              className={`inline-flex w-full items-center justify-center gap-3 rounded-xl border px-5 py-2 ${resolvedTheme.secondaryButtonClass}`}
             >
               <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
               <span className="w-fit text-center text-wrap md:text-lg">
@@ -222,7 +252,7 @@ export default function RfbContainer({
             {infoItems.map((item) => (
               <div
                 key={item.id}
-                className="aspect-square rounded-3xl border border-red-300 bg-red-100 p-2 text-center"
+                className={`aspect-square rounded-3xl border p-2 text-center ${resolvedTheme.infoCardClass}`}
               >
                 <div className="flex h-full flex-col items-center justify-center">
                   <img src={item.img} alt={item.label} className="h-10" />
@@ -238,11 +268,13 @@ export default function RfbContainer({
         <section
           id="legality"
           ref={registerSection("legality")}
-          className="space-y-4 bg-zinc-200 p-4"
+          className={`space-y-4 p-4 ${resolvedTheme.legalitySectionClass}`}
         >
           <div className="flex items-center justify-between">
             <h5 className="text-2xl font-bold">Legal Integrity</h5>
-            <div className="w-fit rounded-full border border-green-400 bg-green-200 px-2 py-1 text-green-800">
+            <div
+              className={`w-fit rounded-full border px-2 py-1 ${resolvedTheme.verifiedPillClass}`}
+            >
               Verified <FontAwesomeIcon icon={faCheckCircle} />
             </div>
           </div>
@@ -269,7 +301,9 @@ export default function RfbContainer({
 
           <div className="space-y-8">
             <div className="space-y-2">
-              <h6 className="text-xl font-bold text-red-800">
+              <h6
+                className={`text-xl font-bold ${resolvedTheme.corporateHeadingClass}`}
+              >
                 {company?.name || "Profil Perusahaan"}
               </h6>
 
@@ -292,7 +326,9 @@ export default function RfbContainer({
                   key={item.id}
                   className="flex flex-col items-center justify-center bg-white p-4"
                 >
-                  <h5 className="break-words text-2xl font-bold text-red-800 md:text-3xl">
+                  <h5
+                    className={`break-words text-2xl font-bold md:text-3xl ${resolvedTheme.statsNumberClass}`}
+                  >
                     {item.value}
                   </h5>
                   <p className="font-semibold text-zinc-400 md:text-xl">
@@ -322,7 +358,9 @@ export default function RfbContainer({
           ref={registerSection("social-media")}
           className="scroll-mt-28 p-4"
         >
-          <div className="rounded-3xl bg-linear-to-r from-red-800 to-red-700 p-7">
+          <div
+            className={`rounded-3xl p-7 ${resolvedTheme.socialSectionClass}`}
+          >
             <div className="mx-auto flex w-fit items-center gap-2 text-center">
               <img src={worldStar} alt="World Star" />
               <h5 className="text-2xl font-bold text-white">My Social Media</h5>
@@ -338,10 +376,10 @@ export default function RfbContainer({
                     <a
                       key={item.id}
                       href={socialUrl}
-                      className="block rounded-full border border-red-200/50 bg-red-100/20 p-4"
+                      className={`block rounded-full border p-4 ${resolvedTheme.socialItemClass}`}
                       {...renderLinkTarget(socialUrl)}
                     >
-                      <div className="mx-auto flex w-fit items-center gap-2 text-white">
+                      <div className="mx-auto flex w-fit items-center gap-2">
                         {socialIcon ? (
                           <img
                             src={socialIcon}
@@ -359,8 +397,10 @@ export default function RfbContainer({
                   );
                 })
               ) : (
-                <div className="rounded-full border border-red-200/50 bg-red-100/20 p-4">
-                  <div className="mx-auto flex w-fit items-center gap-2 text-white">
+                <div
+                  className={`rounded-full border p-4 ${resolvedTheme.socialItemClass}`}
+                >
+                  <div className="mx-auto flex w-fit items-center gap-2">
                     <FontAwesomeIcon icon={faGlobe} className="h-5" />
                     <p>Belum ada social media</p>
                   </div>
@@ -371,10 +411,14 @@ export default function RfbContainer({
         </section>
 
         <div className="p-4">
-          <div className="rounded-3xl border border-red-200 bg-red-50 p-7">
+          <div
+            className={`rounded-3xl border p-7 ${resolvedTheme.antiFraudCardClass}`}
+          >
             <div className="flex items-center gap-2">
               <img src={safeAlertFill} alt="Alert Icon" className="h-7" />
-              <h6 className="text-xl font-bold text-red-900">
+              <h6
+                className={`text-xl font-bold ${resolvedTheme.antiFraudTitleClass}`}
+              >
                 Anti-Fraud Notice
               </h6>
             </div>

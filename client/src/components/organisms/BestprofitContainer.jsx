@@ -5,15 +5,16 @@ import {
   faDownload,
   faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
-import riffanBg from "../../assets/RFB BCG 1.png";
-import verifiedBadge from "../../assets/ic_round-verified.png";
+import verifiedBadge from "../../assets/logoverif-putih.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
-import MediaPlaceholder from "../../assets/MediaPlaceholder.png";
+import MediaPlaceholder from "../../assets/MediaPlaceholderBPF.png";
 import worldStar from "../../assets/world-star.png";
-import tiktokIcon from "../../assets/tiktok-icon.png";
-import instagramIcon from "../../assets/instagram-icon.png";
-import linkedinIcon from "../../assets/linkedin-icon.png";
-import safeAlertFill from "../../assets/safe-alert-fill.png";
+import tiktokIcon from "../../assets/qlementine-icons_tiktok-16.png";
+import instagramIcon from "../../assets/mdi_instagram.png";
+import linkedinIcon from "../../assets/ri_linkedin-box-fill.png";
+import safeAlertFill from "../../assets/mingcute_safe-alert-line.png";
+import LogoBPF from "../../assets/logoBPF.png";
+import logoBPF2 from "../../assets/LOGO-BPF-2.png";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
@@ -66,7 +67,7 @@ function getSocialMediaDisplayValue(value) {
     .replace(/\/+$/g, "");
 }
 
-export default function RfbContainer({
+export default function BestprofitContainer({
   activeSection,
   sectionNavItems,
   onSectionNavigate,
@@ -87,7 +88,7 @@ export default function RfbContainer({
 }) {
   return (
     <div
-      data-company-theme="riffan"
+      data-company-theme="bestprofit"
       className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-white"
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
@@ -104,7 +105,7 @@ export default function RfbContainer({
                   aria-current={isActive ? "true" : "false"}
                   className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-all duration-200 ${
                     isActive
-                      ? "bg-red-900 text-white shadow-[0_14px_28px_rgba(127,29,29,0.28)]"
+                      ? "bg-sky-700 text-white shadow-[0_14px_28px_rgba(3,105,161,0.28)]"
                       : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
                   }`}
                 >
@@ -129,25 +130,16 @@ export default function RfbContainer({
           ref={registerSection("profile")}
         >
           {companyBrand ? (
-            <div className="absolute left-6 top-6 z-50">
-              {companyBrand.logoSrc ? (
-                <img
-                  className="h-12 w-auto object-contain"
-                  src={companyBrand.logoSrc}
-                  alt={company?.name || "Company logo"}
-                />
-              ) : (
-                <div className="inline-flex min-h-14 min-w-14 items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-bold tracking-[0.18em] text-white">
-                  {companyBrand.shortName}
-                </div>
-              )}
+            <div className="flex items-center justify-center">
+              <img
+                className="h-12 w-auto object-contain"
+                src={LogoBPF}
+                alt={company?.name || "Company logo"}
+              />
             </div>
           ) : null}
 
-          <div
-            className="relative min-h-[520px] overflow-hidden rounded-xl bg-white bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${riffanBg})` }}
-          >
+          <div className="relative min-h-[520px] overflow-hidden rounded-xl bg-sky-100">
             <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center md:justify-end">
               {profile?.photo ? (
                 <img
@@ -162,22 +154,17 @@ export default function RfbContainer({
               )}
             </div>
 
-            <div className="absolute bottom-5 z-50 rounded-r-xl bg-white/70 p-4 backdrop-blur-xs">
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-black drop-shadow-lg md:text-2xl">
-                  {profile?.name || "Nama Profil"}
-                </h1>
-                <div>
-                  <img
-                    src={verifiedBadge}
-                    alt="Logo Verified"
-                    className="h-5 md:h-6"
-                  />
-                </div>
+            <div className="absolute bottom-0 z-50 w-full bg-linear-0 from-sky-900 to-transparent p-4 pt-10 text-white">
+              <div className="flex items-center gap-1 bg-sky-500 rounded-full w-fit px-2 py-0.5">
+                <img src={verifiedBadge} alt="Logo Verified" className="h-5" />
+                <p className="uppercase font-bold text-white">Verified</p>
               </div>
-              <div className="text-red-900">
+              <h1 className="text-2xl font-bold drop-shadow-lg md:text-3xl">
+                {profile?.name || "Nama Profil"}
+              </h1>
+              <div className="">
                 <p className="md:text-lg">{headline}</p>
-                <p className="text-lg font-bold">
+                <p className="text-2xl font-bold">
                   {profile?.licenseNumber || "Nomor Izin"}
                 </p>
               </div>
@@ -190,7 +177,7 @@ export default function RfbContainer({
               onClick={
                 companyVideoUrl ? undefined : (event) => event.preventDefault()
               }
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-sky-700 px-7 py-2 text-white"
               {...renderLinkTarget(companyVideoUrl)}
             >
               <FontAwesomeIcon icon={faDownload} className="text-2xl" />
@@ -202,7 +189,7 @@ export default function RfbContainer({
             <a
               href={vcardHref}
               download={`${vcardName || "contact"}.vcf`}
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 px-5 py-2 text-red-800"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-sky-200 px-5 py-2 text-sky-800"
             >
               <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
               <span className="w-fit text-center text-wrap md:text-lg">
@@ -222,11 +209,11 @@ export default function RfbContainer({
             {infoItems.map((item) => (
               <div
                 key={item.id}
-                className="aspect-square rounded-3xl border border-red-300 bg-red-100 p-2 text-center"
+                className="rounded-3xl border border-sky-200 bg-sky-50 py-2 px-3 text-center"
               >
-                <div className="flex h-full flex-col items-center justify-center">
-                  <img src={item.img} alt={item.label} className="h-10" />
-                  <p className="mt-2 font-semibold text-black md:text-xl">
+                <div className="flex h-full items-center gap-1 justify-center">
+                  <img src={item.img} alt={item.label} className="h-7" />
+                  <p className="font-semibold text-black text-sm md:text-lg">
                     {item.label}
                   </p>
                 </div>
@@ -238,13 +225,10 @@ export default function RfbContainer({
         <section
           id="legality"
           ref={registerSection("legality")}
-          className="space-y-4 bg-zinc-200 p-4"
+          className="space-y-4 bg-sky-50/70 m-4 p-4 border border-sky-300 rounded-2xl"
         >
           <div className="flex items-center justify-between">
-            <h5 className="text-2xl font-bold">Legal Integrity</h5>
-            <div className="w-fit rounded-full border border-green-400 bg-green-200 px-2 py-1 text-green-800">
-              Verified <FontAwesomeIcon icon={faCheckCircle} />
-            </div>
+            <h5 className="text-2xl font-bold">Regulatory Status</h5>
           </div>
 
           <div className="mt-7">
@@ -252,7 +236,7 @@ export default function RfbContainer({
               <img
                 src={certificateImageSrc}
                 alt={certificateImageAlt}
-                className="w-full overflow-hidden rounded-2xl"
+                className="h-full overflow-hidden rounded-2xl"
               />
             </div>
           </div>
@@ -261,59 +245,75 @@ export default function RfbContainer({
         <section
           id="corporate"
           ref={registerSection("corporate")}
-          className="scroll-mt-28 space-y-4 p-4"
+          className="scroll-mt-28 space-y-8 p-4"
         >
-          <div className="flex items-center justify-between">
-            <h5 className="text-2xl font-bold">Corporate Heritage</h5>
-          </div>
+          <div className="relative overflow-hidden rounded-[28px] shadow-xl bg-[#073d70]">
+            <img
+              src={logoBPF2}
+              alt="Bestprofit Futures"
+              className="pointer-events-none absolute left-0 top-[-200px] h-full w-full object-contain"
+            />
 
-          <div className="space-y-8">
-            <div className="space-y-2">
-              <h6 className="text-xl font-bold text-red-800">
-                {company?.name || "Profil Perusahaan"}
-              </h6>
+            <div className="relative z-10 space-y-7 text-white pt-32 bg-linear-0 from-[#073d70] via-[#073d70] to-[#073d70]/50 p-7">
+              <div>
+                <h5 className="text-2xl font-extrabold uppercase tracking-wide">
+                  Corporate
+                </h5>
 
-              <p className="text-justify md:text-lg">
-                {company?.description ||
-                  "Pialang berjangka resmi yang menghadirkan layanan investasi yang aman, terpercaya, dan profesional untuk mendukung aktivitas pemasaran dan edukasi nasabah."}
+                <h6 className="mt-2 text-2xl font-bold">
+                  {company?.name || "PT Bestprofit Futures"}
+                </h6>
+              </div>
+
+              <p className="max-w-xl text-lg leading-9 text-white/85">
+                PT Bestprofit Futures, pialang berjangka resmi berizin BAPPEBTI
+                sejak 2004, hadir dengan 12 kantor di Indonesia untuk memberikan
+                layanan perdagangan berjangka yang aman, terpercaya, dan
+                profesional bagi kesuksesan investasi Anda.
               </p>
-            </div>
 
-            <div className="flex items-start gap-1">
-              <img src={googleMapIcon} alt="Google Map" className="h-fit" />
-              <p className="text-sm md:text-base">
-                {branch?.address || "Alamat cabang belum tersedia."}
-              </p>
-            </div>
+              <div className="h-px w-full bg-white/70" />
 
-            <div className="grid grid-cols-2 gap-0.5 overflow-hidden rounded-3xl text-center shadow">
-              {corporateStats.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col items-center justify-center bg-white p-4"
-                >
-                  <h5 className="break-words text-2xl font-bold text-red-800 md:text-3xl">
-                    {item.value}
-                  </h5>
-                  <p className="font-semibold text-zinc-400 md:text-xl">
-                    {item.label}
+              <div className="grid grid-cols-3 items-center text-white">
+                <div>
+                  <h6 className="text-2xl font-extrabold">10+</h6>
+                  <p className="mt-1 text-sm font-medium uppercase tracking-wide text-white/60">
+                    Branches
                   </p>
                 </div>
-              ))}
-            </div>
 
-            <div className="overflow-hidden rounded-3xl">
-              {companyVideoUrl ? (
-                <a
-                  href={companyVideoUrl}
-                  {...renderLinkTarget(companyVideoUrl)}
-                >
-                  <img src={MediaPlaceholder} alt="Media Placeholder" />
-                </a>
-              ) : (
-                <img src={MediaPlaceholder} alt="Media Placeholder" />
-              )}
+                <div className="border-x border-white/70 px-6">
+                  <h6 className="text-2xl font-extrabold">24/5</h6>
+                  <p className="mt-1 text-sm font-medium uppercase tracking-wide text-white/60">
+                    Support
+                  </p>
+                </div>
+
+                <div className="pl-6">
+                  <h6 className="text-2xl font-extrabold">Bappebti</h6>
+                  <p className="mt-1 text-sm font-medium uppercase tracking-wide text-white/60">
+                    Legality
+                  </p>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div className="flex items-start gap-1">
+            <img src={googleMapIcon} alt="Google Map" className="h-fit" />
+            <p className="text-sm md:text-base">
+              {branch?.address || "Alamat cabang belum tersedia."}
+            </p>
+          </div>
+
+          <div className="overflow-hidden rounded-3xl border-2 border-sky-900">
+            {companyVideoUrl ? (
+              <a href={companyVideoUrl} {...renderLinkTarget(companyVideoUrl)}>
+                <img src={MediaPlaceholder} alt="Media Placeholder" />
+              </a>
+            ) : (
+              <img src={MediaPlaceholder} alt="Media Placeholder" />
+            )}
           </div>
         </section>
 
@@ -322,13 +322,12 @@ export default function RfbContainer({
           ref={registerSection("social-media")}
           className="scroll-mt-28 p-4"
         >
-          <div className="rounded-3xl bg-linear-to-r from-red-800 to-red-700 p-7">
+          <div className="">
             <div className="mx-auto flex w-fit items-center gap-2 text-center">
-              <img src={worldStar} alt="World Star" />
-              <h5 className="text-2xl font-bold text-white">My Social Media</h5>
+              <h5 className="text-xl font-bold">CONNECT ON MY SOCIALS</h5>
             </div>
 
-            <div className="mt-7 space-y-4">
+            <div className="mt-7 grid grid-cols-2 gap-4">
               {socialMediaItems.length ? (
                 socialMediaItems.map((item) => {
                   const socialIcon = SOCIAL_MEDIA_IMAGE_BY_ID[item.id];
@@ -338,15 +337,15 @@ export default function RfbContainer({
                     <a
                       key={item.id}
                       href={socialUrl}
-                      className="block rounded-full border border-red-200/50 bg-red-100/20 p-4"
+                      className="block rounded-xl border border-sky-500/50 bg-white/15 p-4"
                       {...renderLinkTarget(socialUrl)}
                     >
-                      <div className="mx-auto flex w-fit items-center gap-2 text-white">
+                      <div className="mx-auto flex flex-col w-fit items-center gap-2">
                         {socialIcon ? (
                           <img
                             src={socialIcon}
                             alt={`${item.label} Icon`}
-                            className="h-5"
+                            className="h-7"
                           />
                         ) : (
                           <FontAwesomeIcon icon={faGlobe} className="h-5" />
@@ -359,8 +358,8 @@ export default function RfbContainer({
                   );
                 })
               ) : (
-                <div className="rounded-full border border-red-200/50 bg-red-100/20 p-4">
-                  <div className="mx-auto flex w-fit items-center gap-2 text-white">
+                <div className="rounded-full border border-sky-100/50 bg-white/15 p-4">
+                  <div className="mx-auto flex w-fit items-center gap-2">
                     <FontAwesomeIcon icon={faGlobe} className="h-5" />
                     <p>Belum ada social media</p>
                   </div>
@@ -374,7 +373,7 @@ export default function RfbContainer({
           <div className="rounded-3xl border border-red-200 bg-red-50 p-7">
             <div className="flex items-center gap-2">
               <img src={safeAlertFill} alt="Alert Icon" className="h-7" />
-              <h6 className="text-xl font-bold text-red-900">
+              <h6 className="text-xl font-bold text-red-500">
                 Anti-Fraud Notice
               </h6>
             </div>

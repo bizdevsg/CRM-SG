@@ -134,5 +134,16 @@ export function getDefaultDashboardPath(role) {
 
 export function findMenuItemByPath(role, pathname) {
   const menu = getRoleDashboardConfig(role).menu;
-  return menu.find((item) => item.to === pathname) || menu[0] || null;
+
+  const exactMatch = menu.find((item) => item.to === pathname);
+
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const prefixMatches = menu
+    .filter((item) => item.to !== "/dashboard" && pathname.startsWith(`${item.to}/`))
+    .sort((left, right) => right.to.length - left.to.length);
+
+  return prefixMatches[0] || menu[0] || null;
 }

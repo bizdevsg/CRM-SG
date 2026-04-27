@@ -4,6 +4,31 @@ import ResourceListPanel from "../../../components/organisms/ResourceListPanel";
 import ResourceRow from "../../../components/molecules/ResourceRow";
 import { useDashboard } from "../../../context/DashboardContext";
 
+function renderBranchCard(branch) {
+  return (
+    <ResourceRow>
+      <div>
+        <strong className="block text-base text-slate-900">{branch.name}</strong>
+        <p className="text-sm text-slate-500">{branch.companyName || "-"}</p>
+      </div>
+
+      <p className="line-clamp-2 text-sm text-slate-600">{branch.address || "-"}</p>
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+          Admin: {branch.adminCount}
+        </span>
+        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+          Marketing: {branch.marketingCount}
+        </span>
+        <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-medium text-violet-700">
+          E-Card: {branch.ecardCount}
+        </span>
+      </div>
+    </ResourceRow>
+  );
+}
+
 export default function BranchesPage() {
   const { dashboard, deleteBranch } = useDashboard();
   const navigate = useNavigate();
@@ -36,16 +61,7 @@ export default function BranchesPage() {
             Edit
           </Button>
         )}
-        renderItem={(branch) => (
-          <ResourceRow>
-            <strong className="text-base text-slate-900">{branch.name}</strong>
-            <span>{branch.companyName}</span>
-            <span>{branch.address}</span>
-            <span>Admin: {branch.adminCount}</span>
-            <span>Marketing: {branch.marketingCount}</span>
-            <span>E-Card: {branch.ecardCount}</span>
-          </ResourceRow>
-        )}
+        renderItem={renderBranchCard}
       />
     </div>
   );
