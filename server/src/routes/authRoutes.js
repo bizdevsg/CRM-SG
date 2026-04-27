@@ -50,6 +50,12 @@ router.post("/login", async (req, res) => {
     });
   }
 
+  if (user.isActive === false) {
+    return res.status(403).json({
+      message: "Akun marketing ini sedang non aktif. Hubungi admin Anda."
+    });
+  }
+
   return res.json(createAuthPayload(sanitizeUser(user)));
 });
 

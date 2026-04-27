@@ -107,6 +107,12 @@ async function ensureColumn(tableName, columnName, definition) {
   }
 }
 
+async function dropColumnIfExists(tableName, columnName) {
+  if (await columnExists(tableName, columnName)) {
+    await query(`ALTER TABLE ${tableName} DROP COLUMN ${columnName}`);
+  }
+}
+
 async function uniqueIndexExists(tableName, indexName) {
   if (!(await tableExists(tableName))) {
     return false;
@@ -164,6 +170,7 @@ async function createTables() {
       username VARCHAR(100) NOT NULL UNIQUE,
       email VARCHAR(150) NOT NULL UNIQUE,
       password TEXT NOT NULL,
+      is_active BOOLEAN DEFAULT TRUE,
       nik VARCHAR(50) NULL UNIQUE,
       license_number TEXT NULL,
       real_position TEXT NULL,
@@ -185,16 +192,26 @@ async function createTables() {
       display_position TEXT NULL,
       description TEXT NULL,
       phone_number VARCHAR(50) NULL,
-      instagram TEXT NULL,
-      tiktok TEXT NULL,
-      twitter TEXT NULL,
-      linkedin TEXT NULL,
       supervisor_user_id BIGINT UNSIGNED NULL,
       supervisor_name TEXT NULL,
       created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (supervisor_user_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS marketing_social_media (
+      id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT UNSIGNED NOT NULL,
+      platform VARCHAR(50) NOT NULL,
+      username VARCHAR(150) NULL,
+      url TEXT NOT NULL,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE KEY uq_marketing_social_media_user_platform (user_id, platform)
     )
   `);
 
@@ -232,7 +249,8 @@ async function ensureColumns() {
 
   await ensureColumn("users", "name", "TEXT NULL AFTER id");
   await ensureColumn("users", "password", "TEXT NULL AFTER email");
-  await ensureColumn("users", "nik", "VARCHAR(50) NULL UNIQUE AFTER password");
+  await ensureColumn("users", "is_active", "BOOLEAN DEFAULT TRUE AFTER password");
+  await ensureColumn("users", "nik", "VARCHAR(50) NULL UNIQUE AFTER is_active");
   await ensureColumn("users", "license_number", "TEXT NULL AFTER nik");
   await ensureColumn("users", "real_position", "TEXT NULL AFTER license_number");
   await ensureColumn(
@@ -245,12 +263,13 @@ async function ensureColumns() {
   await ensureColumn("user_profiles", "display_position", "TEXT NULL AFTER photo_profile");
   await ensureColumn("user_profiles", "description", "TEXT NULL AFTER display_position");
   await ensureColumn("user_profiles", "phone_number", "VARCHAR(50) NULL AFTER description");
-  await ensureColumn("user_profiles", "instagram", "TEXT NULL AFTER phone_number");
-  await ensureColumn("user_profiles", "tiktok", "TEXT NULL AFTER instagram");
-  await ensureColumn("user_profiles", "twitter", "TEXT NULL AFTER tiktok");
-  await ensureColumn("user_profiles", "linkedin", "TEXT NULL AFTER twitter");
-  await ensureColumn("user_profiles", "supervisor_user_id", "BIGINT UNSIGNED NULL AFTER linkedin");
+  await ensureColumn("user_profiles", "supervisor_user_id", "BIGINT UNSIGNED NULL AFTER phone_number");
   await ensureColumn("user_profiles", "supervisor_name", "TEXT NULL AFTER supervisor_user_id");
+
+  await ensureColumn("marketing_social_media", "platform", "VARCHAR(50) NOT NULL AFTER user_id");
+  await ensureColumn("marketing_social_media", "username", "VARCHAR(150) NULL AFTER platform");
+  await ensureColumn("marketing_social_media", "url", "TEXT NOT NULL AFTER username");
+  await dropColumnIfExists("marketing_social_media", "is_active");
 
   if (await tableExists("marketing_supervisors")) {
     await ensureColumn("marketing_supervisors", "marketing_id", "BIGINT UNSIGNED NULL AFTER id");
@@ -301,6 +320,7 @@ async function migrateUsersToNewColumns() {
   }
 
   await query("UPDATE users SET role = COALESCE(role, 'marketing')");
+  await query("UPDATE users SET is_active = COALESCE(is_active, TRUE)");
   await query(
     `UPDATE users u
       INNER JOIN branches b ON b.id = u.branch_id
@@ -328,30 +348,6 @@ async function migrateUserProfilesToNewColumns() {
     );
   }
 
-  if (await columnExists("user_profiles", "instagram_url")) {
-    await query(
-      "UPDATE user_profiles SET instagram = COALESCE(NULLIF(instagram, ''), instagram_url) WHERE instagram_url IS NOT NULL"
-    );
-  }
-
-  if (await columnExists("user_profiles", "tiktok_url")) {
-    await query(
-      "UPDATE user_profiles SET tiktok = COALESCE(NULLIF(tiktok, ''), tiktok_url) WHERE tiktok_url IS NOT NULL"
-    );
-  }
-
-  if (await columnExists("user_profiles", "twitter_url")) {
-    await query(
-      "UPDATE user_profiles SET twitter = COALESCE(NULLIF(twitter, ''), twitter_url) WHERE twitter_url IS NOT NULL"
-    );
-  }
-
-  if (await columnExists("user_profiles", "linkedin_url")) {
-    await query(
-      "UPDATE user_profiles SET linkedin = COALESCE(NULLIF(linkedin, ''), linkedin_url) WHERE linkedin_url IS NOT NULL"
-    );
-  }
-
   await query(
     `INSERT INTO user_profiles (
       user_id,
@@ -359,10 +355,6 @@ async function migrateUserProfilesToNewColumns() {
       display_position,
       description,
       phone_number,
-      instagram,
-      tiktok,
-      twitter,
-      linkedin,
       supervisor_user_id,
       supervisor_name
     )
@@ -373,15 +365,47 @@ async function migrateUserProfilesToNewColumns() {
       NULL,
       NULL,
       NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
       NULL
     FROM users u
     LEFT JOIN user_profiles up ON up.user_id = u.id
     WHERE up.user_id IS NULL`
   );
+}
+
+async function migrateSocialMediaToNewTable() {
+  if (!(await tableExists("marketing_social_media"))) {
+    return;
+  }
+
+  const socialColumns = [
+    { column: "instagram", platform: "instagram" },
+    { column: "tiktok", platform: "tiktok" },
+    { column: "twitter", platform: "twitter" },
+    { column: "linkedin", platform: "linkedin" },
+    { column: "instagram_url", platform: "instagram" },
+    { column: "tiktok_url", platform: "tiktok" },
+    { column: "twitter_url", platform: "twitter" },
+    { column: "linkedin_url", platform: "linkedin" }
+  ];
+
+  for (const entry of socialColumns) {
+    if (!(await columnExists("user_profiles", entry.column))) {
+      continue;
+    }
+
+    await query(
+      `INSERT INTO marketing_social_media (user_id, platform, url)
+      SELECT
+        up.user_id,
+        ?,
+        up.${entry.column}
+      FROM user_profiles up
+      WHERE up.${entry.column} IS NOT NULL
+        AND TRIM(up.${entry.column}) <> ''
+      ON DUPLICATE KEY UPDATE url = VALUES(url)`,
+      [entry.platform]
+    );
+  }
 }
 
 async function migrateSupervisorsToNewColumns() {
@@ -507,6 +531,7 @@ async function migrateExistingData() {
 
   await migrateUsersToNewColumns();
   await migrateUserProfilesToNewColumns();
+  await migrateSocialMediaToNewTable();
   await migrateSupervisorsToNewColumns();
   await migrateLegacyCertificates();
   await migrateLegacyEcards();
@@ -745,23 +770,15 @@ async function seedDemoData() {
       display_position,
       description,
       phone_number,
-      instagram,
-      tiktok,
-      twitter,
-      linkedin,
       supervisor_user_id,
       supervisor_name
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)`,
     [
       rinaId,
       null,
       "Senior Marketing Consultant",
       "Spesialis relasi nasabah untuk segmen premium dan edukasi market.",
       "081200000004",
-      "https://instagram.com/rina.marketing",
-      "https://tiktok.com/@rina.marketing",
-      "https://x.com/rina_marketing",
-      "https://linkedin.com/in/rina-marketing",
       jakartaAdminId,
       "Admin Jakarta Solid Gold",
       budiId,
@@ -769,12 +786,39 @@ async function seedDemoData() {
       "Marketing Consultant",
       "Fokus pada edukasi calon nasabah dan follow up prospek cabang Bandung.",
       "081200000005",
-      "https://instagram.com/budi.marketing",
-      null,
-      null,
-      "https://linkedin.com/in/budi-marketing",
       bandungAdminId,
       "Admin Bandung Riffan"
+    ]
+  );
+
+  await query(
+    `INSERT INTO marketing_social_media (user_id, platform, username, url)
+      VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)`,
+    [
+      rinaId,
+      "instagram",
+      "rina.marketing",
+      "https://instagram.com/rina.marketing",
+      rinaId,
+      "tiktok",
+      "@rina.marketing",
+      "https://tiktok.com/@rina.marketing",
+      rinaId,
+      "twitter",
+      "rina_marketing",
+      "https://x.com/rina_marketing",
+      rinaId,
+      "linkedin",
+      "rina-marketing",
+      "https://linkedin.com/in/rina-marketing",
+      budiId,
+      "instagram",
+      "budi.marketing",
+      "https://instagram.com/budi.marketing",
+      budiId,
+      "linkedin",
+      "budi-marketing",
+      "https://linkedin.com/in/budi-marketing"
     ]
   );
 
@@ -846,6 +890,11 @@ export async function initializeDatabase() {
   await createTables();
   await ensureColumns();
   await migrateExistingData();
+  await ensureUniqueIndex(
+    "marketing_social_media",
+    "uq_marketing_social_media_user_platform",
+    "user_id, platform"
+  );
   await ensureUniqueIndex("ecards", "uq_ecards_user_id", "user_id");
   await seedBaseData();
   await seedDemoData();

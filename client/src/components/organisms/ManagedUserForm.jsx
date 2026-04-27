@@ -167,6 +167,10 @@ export default function ManagedUserForm({
         required={requirePassword}
       />
       <Input name="nik" value={form.nik} onChange={handleChange} placeholder="NIK" />
+      <Select name="isActive" value={String(form.isActive ?? "true")} onChange={handleChange}>
+        <option value="true">Status Aktif</option>
+        <option value="false">Status Non Aktif</option>
+      </Select>
       <Input
         name="licenseNumber"
         value={form.licenseNumber}

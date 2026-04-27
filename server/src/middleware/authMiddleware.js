@@ -24,6 +24,12 @@ export async function authMiddleware(req, res, next) {
       });
     }
 
+    if (user.isActive === false) {
+      return res.status(403).json({
+        message: "Akun ini sedang non aktif."
+      });
+    }
+
     req.user = sanitizeUser(user);
     next();
   } catch {

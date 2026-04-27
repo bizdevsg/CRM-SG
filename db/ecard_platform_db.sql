@@ -34,6 +34,7 @@ CREATE TABLE users (
     username VARCHAR(100) NOT NULL UNIQUE,
     email VARCHAR(150) NOT NULL UNIQUE,
     password TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
 
     nik VARCHAR(50) NULL UNIQUE,
     license_number TEXT NULL,
@@ -63,10 +64,6 @@ CREATE TABLE user_profiles (
     description TEXT NULL,
 
     phone_number VARCHAR(50) NULL,
-    instagram TEXT NULL,
-    tiktok TEXT NULL,
-    twitter TEXT NULL,
-    linkedin TEXT NULL,
     supervisor_user_id BIGINT UNSIGNED NULL,
     supervisor_name TEXT NULL,
 
@@ -78,7 +75,24 @@ CREATE TABLE user_profiles (
 );
 
 -- =========================
--- 5. Sertifikat
+-- 5. Social Media Marketing
+-- =========================
+CREATE TABLE marketing_social_media (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    platform VARCHAR(50) NOT NULL,
+    username VARCHAR(150) NULL,
+    url TEXT NOT NULL,
+
+    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_marketing_social_media_user_platform (user_id, platform)
+);
+
+-- =========================
+-- 6. Sertifikat
 -- =========================
 CREATE TABLE marketing_certificates (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -94,7 +108,7 @@ CREATE TABLE marketing_certificates (
 );
 
 -- =========================
--- 6. E-Card
+-- 7. E-Card
 -- =========================
 CREATE TABLE ecards (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

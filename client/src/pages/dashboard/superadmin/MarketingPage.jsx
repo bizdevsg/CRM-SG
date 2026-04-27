@@ -24,6 +24,7 @@ export default function MarketingPage() {
             <span>{marketing.email}</span>
             <span>{marketing.companyName}</span>
             <span>{marketing.branchName}</span>
+            <span>Status: {marketing.isActive ? "Aktif" : "Non Aktif"}</span>
             <span>Profile: {marketing.ecardJobTitle || marketing.positionTitle || "-"}</span>
             <span>Sertifikat: {marketing.certificateCount ?? 0}</span>
             <span>E-Card: {marketing.ecardCount ?? 0}</span>

@@ -9,7 +9,8 @@ import {
   removeEcardEntry,
   updateCertificateEntry,
   updateEcardEntry,
-  updateUserProfile
+  updateUserProfile,
+  updateUserSocialMedia
 } from "../data/userStore.js";
 import { absolutePathToPublicPath, removeUploadedFile } from "../utils/uploadStorage.js";
 import { validateProfilePhotoFile } from "../utils/imageValidation.js";
@@ -31,16 +32,7 @@ router.get("/me/resources", async (req, res) => {
 });
 
 router.put("/me/profile", profilePhotoUpload.single("photoFile"), async (req, res) => {
-  const {
-    photo,
-    ecardJobTitle,
-    description,
-    phone,
-    instagram,
-    tiktok,
-    twitter,
-    linkedin
-  } = req.body;
+  const { photo, ecardJobTitle, description, phone } = req.body;
   const uploadedPhotoPath = req.file ? absolutePathToPublicPath(req.file.path) : null;
 
   if (req.file) {
@@ -61,15 +53,59 @@ router.put("/me/profile", profilePhotoUpload.single("photoFile"), async (req, re
     photo: uploadedPhotoPath || photo,
     ecardJobTitle,
     description,
-    phone,
-    instagram,
-    tiktok,
-    twitter,
-    linkedin
+    phone
   });
 
   return res.json({
     message: "Profil user berhasil diperbarui.",
+    user: profile
+  });
+});
+
+router.put("/me/social-media", async (req, res) => {
+  const {
+    instagramUsername,
+    instagramUrl,
+    tiktokUsername,
+    tiktokUrl,
+    twitterUsername,
+    twitterUrl,
+    linkedinUsername,
+    linkedinUrl
+  } = req.body;
+
+  const entries = [
+    { label: "Instagram", username: instagramUsername, url: instagramUrl },
+    { label: "TikTok", username: tiktokUsername, url: tiktokUrl },
+    { label: "Twitter/X", username: twitterUsername, url: twitterUrl },
+    { label: "LinkedIn", username: linkedinUsername, url: linkedinUrl }
+  ];
+
+  const invalidEntry = entries.find(({ username, url }) => {
+    const hasUsername = Boolean(String(username || "").trim());
+    const hasUrl = Boolean(String(url || "").trim());
+    return hasUsername !== hasUrl;
+  });
+
+  if (invalidEntry) {
+    return res.status(400).json({
+      message: `${invalidEntry.label} harus diisi lengkap: username dan URL.`
+    });
+  }
+
+  const profile = await updateUserSocialMedia(req.user.id, {
+    instagramUsername,
+    instagramUrl,
+    tiktokUsername,
+    tiktokUrl,
+    twitterUsername,
+    twitterUrl,
+    linkedinUsername,
+    linkedinUrl
+  });
+
+  return res.json({
+    message: "Social media berhasil diperbarui.",
     user: profile
   });
 });

@@ -250,6 +250,16 @@ export function DashboardProvider({ children }) {
             }),
           "Profil berhasil diperbarui."
         ),
+      updateSocialMedia: (payload) =>
+        runAction(
+          () =>
+            apiFetch("/marketing/me/social-media", {
+              method: "PUT",
+              token,
+              body: payload
+            }),
+          "Social media berhasil diperbarui."
+        ),
       addCertificate: (payload) =>
         runAction(
           () =>

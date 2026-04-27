@@ -47,6 +47,7 @@ export default function UserEditPage() {
             email: user.email || "",
             password: "",
             nik: user.nik || "",
+            isActive: String(user.isActive ?? true),
             licenseNumber: user.licenseNumber || "",
             positionTitle: user.positionTitle || "",
             role: user.role || "marketing",

@@ -37,6 +37,7 @@ export default function TeamCreatePage() {
             email: "",
             password: "",
             nik: "",
+            isActive: "true",
             licenseNumber: "",
             positionTitle: "",
             role: "marketing",

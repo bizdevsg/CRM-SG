@@ -41,6 +41,7 @@ export default function TeamPage() {
             <strong className="text-base text-slate-900">{marketing.name}</strong>
             <span>{marketing.email}</span>
             <span>{marketing.positionTitle || "-"}</span>
+            <span>Status: {marketing.isActive ? "Aktif" : "Non Aktif"}</span>
             <span>Sertifikat: {marketing.certificateCount ?? 0}</span>
             <span>E-Card: {marketing.ecardCount ?? 0}</span>
             <span>Atasan: {marketing.supervisorName || "-"}</span>

@@ -140,6 +140,7 @@ CREATE TABLE `users` (
   `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
   `nik` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `license_number` text COLLATE utf8mb4_unicode_ci,
   `real_position` text COLLATE utf8mb4_unicode_ci,
@@ -154,10 +155,10 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `username`, `email`, `password`, `nik`, `license_number`, `real_position`, `company_id`, `branch_id`, `role`, `created_at`, `updated_at`) VALUES
-(1, 'Superadmin', 'superadmin', 'superadmin@example.com', '$2y$12$Dr8iDW1OGiVhiobDstdKXe5.lXZYsTeQTXiumfi2WtM/z0kJKmz.W', NULL, NULL, NULL, NULL, NULL, 'superadmin', '2026-04-24 01:14:58', '2026-04-24 01:17:59'),
-(2, 'Admin RFB DBS', 'AdminRFBDBS', 'adminrfbdbs@example.com', '$2y$12$Dr8iDW1OGiVhiobDstdKXe5.lXZYsTeQTXiumfi2WtM/z0kJKmz.W', NULL, NULL, NULL, 4, 1, 'admin', '2026-04-24 01:21:17', '2026-04-24 01:22:20'),
-(3, 'Laura Shakira Aisyah Putri', 'araleo9', 'marketing.laura@example.com', '$2b$12$ZuIN54bWIk1ngo5Iohx9BeztSy/k1r2YJ4OMUHaaELAmQoTR6KDpa', '3125012806030001', '174/UPP/SI/03/2013', 'Senior Business Consultant (SBC)', 4, 1, 'marketing', '2026-04-24 02:09:50', '2026-04-24 02:09:50');
+INSERT INTO `users` (`id`, `name`, `username`, `email`, `password`, `is_active`, `nik`, `license_number`, `real_position`, `company_id`, `branch_id`, `role`, `created_at`, `updated_at`) VALUES
+(1, 'Superadmin', 'superadmin', 'superadmin@example.com', '$2y$12$Dr8iDW1OGiVhiobDstdKXe5.lXZYsTeQTXiumfi2WtM/z0kJKmz.W', 1, NULL, NULL, NULL, NULL, NULL, 'superadmin', '2026-04-24 01:14:58', '2026-04-24 01:17:59'),
+(2, 'Admin RFB DBS', 'AdminRFBDBS', 'adminrfbdbs@example.com', '$2y$12$Dr8iDW1OGiVhiobDstdKXe5.lXZYsTeQTXiumfi2WtM/z0kJKmz.W', 1, NULL, NULL, NULL, 4, 1, 'admin', '2026-04-24 01:21:17', '2026-04-24 01:22:20'),
+(3, 'Laura Shakira Aisyah Putri', 'araleo9', 'marketing.laura@example.com', '$2b$12$ZuIN54bWIk1ngo5Iohx9BeztSy/k1r2YJ4OMUHaaELAmQoTR6KDpa', 1, '3125012806030001', '174/UPP/SI/03/2013', 'Senior Business Consultant (SBC)', 4, 1, 'marketing', '2026-04-24 02:09:50', '2026-04-24 02:09:50');
 
 -- --------------------------------------------------------
 
@@ -172,10 +173,6 @@ CREATE TABLE `user_profiles` (
   `display_position` text COLLATE utf8mb4_unicode_ci,
   `description` text COLLATE utf8mb4_unicode_ci,
   `phone_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `instagram` text COLLATE utf8mb4_unicode_ci,
-  `tiktok` text COLLATE utf8mb4_unicode_ci,
-  `twitter` text COLLATE utf8mb4_unicode_ci,
-  `linkedin` text COLLATE utf8mb4_unicode_ci,
   `supervisor_user_id` bigint UNSIGNED DEFAULT NULL,
   `supervisor_name` text COLLATE utf8mb4_unicode_ci,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
@@ -186,10 +183,26 @@ CREATE TABLE `user_profiles` (
 -- Dumping data for table `user_profiles`
 --
 
-INSERT INTO `user_profiles` (`id`, `user_id`, `photo_profile`, `display_position`, `description`, `phone_number`, `instagram`, `tiktok`, `twitter`, `linkedin`, `supervisor_user_id`, `supervisor_name`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-24 01:16:41', '2026-04-24 01:16:41'),
-(2, 2, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-24 01:21:17', '2026-04-24 01:21:17'),
-(3, 3, NULL, 'Senior Business Consultant (SBC)', NULL, NULL, NULL, NULL, NULL, NULL, 2, 'Admin RFB DBS', '2026-04-24 02:09:50', '2026-04-24 02:58:48');
+INSERT INTO `user_profiles` (`id`, `user_id`, `photo_profile`, `display_position`, `description`, `phone_number`, `supervisor_user_id`, `supervisor_name`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-24 01:16:41', '2026-04-24 01:16:41'),
+(2, 2, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-24 01:21:17', '2026-04-24 01:21:17'),
+(3, 3, NULL, 'Senior Business Consultant (SBC)', NULL, NULL, 2, 'Admin RFB DBS', '2026-04-24 02:09:50', '2026-04-24 02:58:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `marketing_social_media`
+--
+
+CREATE TABLE `marketing_social_media` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` bigint UNSIGNED NOT NULL,
+  `platform` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Indexes for dumped tables
@@ -222,6 +235,13 @@ ALTER TABLE `ecards`
 ALTER TABLE `marketing_certificates`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `marketing_social_media`
+--
+ALTER TABLE `marketing_social_media`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_marketing_social_media_user_platform` (`user_id`,`platform`);
 
 --
 -- Indexes for table `marketing_supervisors`
@@ -284,6 +304,12 @@ ALTER TABLE `marketing_supervisors`
   MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `marketing_social_media`
+--
+ALTER TABLE `marketing_social_media`
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
@@ -323,6 +349,12 @@ ALTER TABLE `marketing_certificates`
 ALTER TABLE `marketing_supervisors`
   ADD CONSTRAINT `marketing_supervisors_ibfk_1` FOREIGN KEY (`marketing_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `marketing_supervisors_ibfk_2` FOREIGN KEY (`supervisor_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `marketing_social_media`
+--
+ALTER TABLE `marketing_social_media`
+  ADD CONSTRAINT `marketing_social_media_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `users`

@@ -48,6 +48,7 @@ export default function TeamEditPage() {
             email: marketing.email || "",
             password: "",
             nik: marketing.nik || "",
+            isActive: String(marketing.isActive ?? true),
             licenseNumber: marketing.licenseNumber || "",
             positionTitle: marketing.positionTitle || "",
             role: "marketing",

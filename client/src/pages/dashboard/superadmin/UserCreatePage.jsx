@@ -35,6 +35,7 @@ export default function UserCreatePage() {
             email: "",
             password: "",
             nik: "",
+            isActive: "true",
             licenseNumber: "",
             positionTitle: "",
             role: "admin",

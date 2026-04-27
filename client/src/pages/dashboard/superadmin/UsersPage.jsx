@@ -42,6 +42,7 @@ export default function UsersPage() {
             <span>{user.email}</span>
             <span>{user.companyName}</span>
             <span>{user.branchName}</span>
+            <span>Status: {user.isActive ? "Aktif" : "Non Aktif"}</span>
             <span>{user.positionTitle || "-"}</span>
             <span>Atasan: {user.supervisorName || "-"}</span>
           </ResourceRow>
@@ -68,6 +69,7 @@ export default function UsersPage() {
             <span>{user.email}</span>
             <span>{user.companyName}</span>
             <span>{user.branchName}</span>
+            <span>Status: {user.isActive ? "Aktif" : "Non Aktif"}</span>
             <span>Atasan: {user.supervisorName || "-"}</span>
           </ResourceRow>
         )}

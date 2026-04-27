@@ -40,6 +40,30 @@ export function buildPublicEcardUrl(user) {
   return `${getClientBaseUrl()}/marketing/${user.slug}`;
 }
 
+const SOCIAL_MEDIA_PLATFORM_LABELS = {
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  twitter: "Twitter/X",
+  linkedin: "LinkedIn"
+};
+
+const SOCIAL_MEDIA_PLATFORMS = Object.keys(SOCIAL_MEDIA_PLATFORM_LABELS);
+
+const USER_SOCIAL_MEDIA_PIVOT_QUERY = `
+  SELECT
+    msm.user_id,
+    MAX(CASE WHEN msm.platform = 'instagram' THEN msm.username END) AS instagram_username,
+    MAX(CASE WHEN msm.platform = 'instagram' THEN msm.url END) AS instagram,
+    MAX(CASE WHEN msm.platform = 'tiktok' THEN msm.username END) AS tiktok_username,
+    MAX(CASE WHEN msm.platform = 'tiktok' THEN msm.url END) AS tiktok,
+    MAX(CASE WHEN msm.platform = 'twitter' THEN msm.username END) AS twitter_username,
+    MAX(CASE WHEN msm.platform = 'twitter' THEN msm.url END) AS twitter,
+    MAX(CASE WHEN msm.platform = 'linkedin' THEN msm.username END) AS linkedin_username,
+    MAX(CASE WHEN msm.platform = 'linkedin' THEN msm.url END) AS linkedin
+  FROM marketing_social_media msm
+  GROUP BY msm.user_id
+`;
+
 function mapCompanyRow(row) {
   if (!row) {
     return null;
@@ -83,6 +107,8 @@ function mapUserRow(row) {
     email: row.email || null,
     nik: row.nik || null,
     role: row.role || null,
+    isActive:
+      row.is_active === null || row.is_active === undefined ? true : Boolean(row.is_active),
     companyId: row.company_id ? Number(row.company_id) : null,
     companyName: row.company_name || null,
     branchId: row.branch_id ? Number(row.branch_id) : null,
@@ -97,9 +123,13 @@ function mapUserRow(row) {
     ecardJobTitle: row.display_position || row.real_position || null,
     description: row.profile_description || null,
     phone: row.phone_number || null,
+    instagramUsername: row.instagram_username || null,
     instagram: row.instagram || null,
+    tiktokUsername: row.tiktok_username || null,
     tiktok: row.tiktok || null,
+    twitterUsername: row.twitter_username || null,
     twitter: row.twitter || null,
+    linkedinUsername: row.linkedin_username || null,
     linkedin: row.linkedin || null,
     certificateCount: Number(row.certificate_count || 0),
     ecardCount: Number(row.ecard_count || 0),
@@ -133,6 +163,29 @@ function mapEcardEntry(row, user) {
   };
 }
 
+function buildSocialMediaEntries(source) {
+  return SOCIAL_MEDIA_PLATFORMS.map((platform) => {
+    const url = source?.[platform] || null;
+    const username =
+      source?.[`${platform}Username`] ||
+      source?.[`${platform}_username`] ||
+      null;
+
+    if (!url && !username) {
+      return null;
+    }
+
+    return {
+      id: platform,
+      platform: SOCIAL_MEDIA_PLATFORM_LABELS[platform],
+      label: SOCIAL_MEDIA_PLATFORM_LABELS[platform],
+      username,
+      url: url || "",
+      value: username || url || ""
+    };
+  }).filter(Boolean);
+}
+
 export function sanitizeUser(user) {
   if (!user) {
     return null;
@@ -145,6 +198,10 @@ export function sanitizeUser(user) {
     email: user.email || null,
     nik: user.nik || null,
     role: user.role || null,
+    isActive:
+      user.isActive === null || user.isActive === undefined
+        ? Boolean(user.is_active ?? true)
+        : Boolean(user.isActive),
     companyId: user.companyId ?? (user.company_id ? Number(user.company_id) : null),
     companyName: user.companyName || user.company_name || null,
     branchId: user.branchId ?? (user.branch_id ? Number(user.branch_id) : null),
@@ -160,9 +217,13 @@ export function sanitizeUser(user) {
     ecardJobTitle: user.ecardJobTitle || user.display_position || null,
     description: user.description || user.profile_description || null,
     phone: user.phone || user.phone_number || null,
+    instagramUsername: user.instagramUsername || user.instagram_username || null,
     instagram: user.instagram || null,
+    tiktokUsername: user.tiktokUsername || user.tiktok_username || null,
     tiktok: user.tiktok || null,
+    twitterUsername: user.twitterUsername || user.twitter_username || null,
     twitter: user.twitter || null,
+    linkedinUsername: user.linkedinUsername || user.linkedin_username || null,
     linkedin: user.linkedin || null
   };
 }
@@ -211,6 +272,7 @@ async function getUserBaseRowById(userId) {
       u.username,
       u.email,
       u.password,
+      u.is_active,
       u.nik,
       u.license_number,
       u.real_position,
@@ -224,16 +286,21 @@ async function getUserBaseRowById(userId) {
       up.display_position,
       up.description AS profile_description,
       up.phone_number,
-      up.instagram,
-      up.tiktok,
-      up.twitter,
-      up.linkedin,
+      sm.instagram_username,
+      sm.instagram,
+      sm.tiktok_username,
+      sm.tiktok,
+      sm.twitter_username,
+      sm.twitter,
+      sm.linkedin_username,
+      sm.linkedin,
       up.supervisor_user_id,
       COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
     FROM users u
     LEFT JOIN companies c ON c.id = u.company_id
     LEFT JOIN branches b ON b.id = u.branch_id
     LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN (${USER_SOCIAL_MEDIA_PIVOT_QUERY}) sm ON sm.user_id = u.id
     LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
     WHERE u.id = ?`,
     [userId]
@@ -378,23 +445,15 @@ async function upsertUserProfile(userId, payload) {
         display_position,
         description,
         phone_number,
-        instagram,
-        tiktok,
-        twitter,
-        linkedin,
         supervisor_user_id,
         supervisor_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         payload.photo || null,
         payload.ecardJobTitle || null,
         payload.description || null,
         payload.phone || null,
-        payload.instagram || null,
-        payload.tiktok || null,
-        payload.twitter || null,
-        payload.linkedin || null,
         payload.supervisorId || null,
         payload.supervisorName || null
       ]
@@ -409,10 +468,6 @@ async function upsertUserProfile(userId, payload) {
         display_position = ?,
         description = ?,
         phone_number = ?,
-        instagram = ?,
-        tiktok = ?,
-        twitter = ?,
-        linkedin = ?,
         supervisor_user_id = ?,
         supervisor_name = ?
       WHERE user_id = ?`,
@@ -421,14 +476,37 @@ async function upsertUserProfile(userId, payload) {
       payload.ecardJobTitle || null,
       payload.description || null,
       payload.phone || null,
-      payload.instagram || null,
-      payload.tiktok || null,
-      payload.twitter || null,
-      payload.linkedin || null,
       payload.supervisorId || null,
       payload.supervisorName || null,
       userId
     ]
+  );
+}
+
+async function replaceUserSocialMedia(userId, payload) {
+  await query("DELETE FROM marketing_social_media WHERE user_id = ?", [userId]);
+
+  const entries = SOCIAL_MEDIA_PLATFORMS.map((platform) => ({
+    platform,
+    username: payload?.[`${platform}Username`]?.trim() || null,
+    url: payload?.[`${platform}Url`]?.trim() || null
+  })).filter((entry) => entry.username || entry.url);
+
+  if (!entries.length) {
+    return;
+  }
+
+  const placeholders = entries.map(() => "(?, ?, ?, ?)").join(", ");
+  const params = entries.flatMap((entry) => [
+    userId,
+    entry.platform,
+    entry.username,
+    entry.url || ""
+  ]);
+
+  await query(
+    `INSERT INTO marketing_social_media (user_id, platform, username, url) VALUES ${placeholders}`,
+    params
   );
 }
 
@@ -551,6 +629,7 @@ export async function getUserByEmail(email) {
       u.username,
       u.email,
       u.password,
+      u.is_active,
       u.nik,
       u.license_number,
       u.real_position,
@@ -564,16 +643,21 @@ export async function getUserByEmail(email) {
       up.display_position,
       up.description AS profile_description,
       up.phone_number,
-      up.instagram,
-      up.tiktok,
-      up.twitter,
-      up.linkedin,
+      sm.instagram_username,
+      sm.instagram,
+      sm.tiktok_username,
+      sm.tiktok,
+      sm.twitter_username,
+      sm.twitter,
+      sm.linkedin_username,
+      sm.linkedin,
       up.supervisor_user_id,
       COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
     FROM users u
     LEFT JOIN companies c ON c.id = u.company_id
     LEFT JOIN branches b ON b.id = u.branch_id
     LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN (${USER_SOCIAL_MEDIA_PIVOT_QUERY}) sm ON sm.user_id = u.id
     LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
     WHERE u.email = ?`,
     [email.toLowerCase()]
@@ -613,6 +697,7 @@ export async function listUsers(filters = {}) {
       u.name,
       u.username,
       u.email,
+      u.is_active,
       u.nik,
       u.license_number,
       u.real_position,
@@ -626,10 +711,14 @@ export async function listUsers(filters = {}) {
       up.display_position,
       up.description AS profile_description,
       up.phone_number,
-      up.instagram,
-      up.tiktok,
-      up.twitter,
-      up.linkedin,
+      sm.instagram_username,
+      sm.instagram,
+      sm.tiktok_username,
+      sm.tiktok,
+      sm.twitter_username,
+      sm.twitter,
+      sm.linkedin_username,
+      sm.linkedin,
       up.supervisor_user_id,
       COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
       ,
@@ -647,6 +736,7 @@ export async function listUsers(filters = {}) {
     LEFT JOIN companies c ON c.id = u.company_id
     LEFT JOIN branches b ON b.id = u.branch_id
     LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN (${USER_SOCIAL_MEDIA_PIVOT_QUERY}) sm ON sm.user_id = u.id
     LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
     ${whereClause}
     ORDER BY u.name ASC, u.id ASC`,
@@ -662,6 +752,7 @@ export async function createUser({
   email,
   passwordHash,
   role = "marketing",
+  isActive = true,
   nik = null,
   branchId = null,
   companyId = null,
@@ -683,18 +774,20 @@ export async function createUser({
       username,
       email,
       password,
+      is_active,
       nik,
       license_number,
       real_position,
       company_id,
       branch_id,
       role
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
       normalizedUsername,
       normalizedEmail,
       passwordHash,
+      isActive,
       nik || null,
       licenseNumber || null,
       positionTitle || null,
@@ -736,6 +829,7 @@ export async function updateUser(userId, payload) {
           username = ?,
           email = ?,
           password = ?,
+          is_active = ?,
           nik = ?,
           license_number = ?,
           real_position = ?,
@@ -748,6 +842,7 @@ export async function updateUser(userId, payload) {
         normalizedUsername,
         normalizedEmail,
         payload.passwordHash,
+        payload.isActive ?? currentUser.isActive ?? true,
         payload.nik || null,
         payload.licenseNumber || null,
         payload.positionTitle || null,
@@ -764,6 +859,7 @@ export async function updateUser(userId, payload) {
           name = ?,
           username = ?,
           email = ?,
+          is_active = ?,
           nik = ?,
           license_number = ?,
           real_position = ?,
@@ -775,6 +871,7 @@ export async function updateUser(userId, payload) {
         payload.name,
         normalizedUsername,
         normalizedEmail,
+        payload.isActive ?? currentUser.isActive ?? true,
         payload.nik || null,
         payload.licenseNumber || null,
         payload.positionTitle || null,
@@ -791,10 +888,6 @@ export async function updateUser(userId, payload) {
     ecardJobTitle: payload.positionTitle || currentUser.ecardJobTitle || null,
     description: currentUser.description || null,
     phone: currentUser.phone || null,
-    instagram: currentUser.instagram || null,
-    tiktok: currentUser.tiktok || null,
-    twitter: currentUser.twitter || null,
-    linkedin: currentUser.linkedin || null,
     supervisorId: payload.supervisorId ?? null,
     supervisorName: payload.supervisorName?.trim() || null
   });
@@ -837,9 +930,13 @@ export async function getMarketingResources(userId) {
     ecardJobTitle: user?.ecardJobTitle || "",
     description: user?.description || "",
     phone: user?.phone || "",
+    instagramUsername: user?.instagramUsername || "",
     instagram: user?.instagram || "",
+    tiktokUsername: user?.tiktokUsername || "",
     tiktok: user?.tiktok || "",
+    twitterUsername: user?.twitterUsername || "",
     twitter: user?.twitter || "",
+    linkedinUsername: user?.linkedinUsername || "",
     linkedin: user?.linkedin || "",
     supervisorName: user?.supervisorName || ""
   };
@@ -859,12 +956,7 @@ export async function getMarketingResources(userId) {
     { id: "description", label: "Deskripsi", value: profile.description }
   ].filter((entry) => entry.value);
 
-  const socialMedia = [
-    profile.instagram ? { id: "instagram", platform: "Instagram", url: profile.instagram } : null,
-    profile.tiktok ? { id: "tiktok", platform: "TikTok", url: profile.tiktok } : null,
-    profile.twitter ? { id: "twitter", platform: "Twitter/X", url: profile.twitter } : null,
-    profile.linkedin ? { id: "linkedin", platform: "LinkedIn", url: profile.linkedin } : null
-  ].filter(Boolean);
+  const socialMedia = buildSocialMediaEntries(profile);
 
   return {
     profile,
@@ -885,10 +977,6 @@ export async function updateUserProfile(userId, payload) {
     ecardJobTitle: payload.ecardJobTitle?.trim() || null,
     description: payload.description?.trim() || null,
     phone: payload.phone?.trim() || null,
-    instagram: payload.instagram?.trim() || null,
-    tiktok: payload.tiktok?.trim() || null,
-    twitter: payload.twitter?.trim() || null,
-    linkedin: payload.linkedin?.trim() || null,
     supervisorId: currentUser?.supervisorId || null,
     supervisorName: currentUser?.supervisorName || null
   });
@@ -897,6 +985,11 @@ export async function updateUserProfile(userId, payload) {
     await removeUploadedFile(currentUser.photo);
   }
 
+  return sanitizeUser(await getUserById(userId));
+}
+
+export async function updateUserSocialMedia(userId, payload) {
+  await replaceUserSocialMedia(userId, payload);
   return sanitizeUser(await getUserById(userId));
 }
 
@@ -1069,6 +1162,7 @@ export async function getPublicEcardByRoute({ ecardSlug, slug }) {
       u.id AS user_id,
       u.name AS user_name,
       u.email,
+      u.is_active AS user_is_active,
       u.nik,
       u.license_number,
       u.real_position,
@@ -1082,19 +1176,25 @@ export async function getPublicEcardByRoute({ ecardSlug, slug }) {
       up.display_position,
       up.description AS profile_description,
       up.phone_number,
-      up.instagram,
-      up.tiktok,
-      up.twitter,
-      up.linkedin,
+      sm.instagram_username,
+      sm.instagram,
+      sm.tiktok_username,
+      sm.tiktok,
+      sm.twitter_username,
+      sm.twitter,
+      sm.linkedin_username,
+      sm.linkedin,
       COALESCE(supervisor.name, up.supervisor_name) AS supervisor_name
     FROM ecards e
     INNER JOIN users u ON u.id = e.user_id
     LEFT JOIN companies c ON c.id = u.company_id
     LEFT JOIN branches b ON b.id = u.branch_id
     LEFT JOIN user_profiles up ON up.user_id = u.id
+    LEFT JOIN (${USER_SOCIAL_MEDIA_PIVOT_QUERY}) sm ON sm.user_id = u.id
     LEFT JOIN users supervisor ON supervisor.id = up.supervisor_user_id
     WHERE e.slug = ?
       AND e.is_active = TRUE
+      AND u.is_active = TRUE
     LIMIT 1`,
     [normalizedSlug]
   );
@@ -1150,10 +1250,7 @@ export async function getPublicEcardByRoute({ ecardSlug, slug }) {
     socialMedia: [
       profile.phone ? { id: "phone", label: "Telepon", url: `tel:${profile.phone}`, value: profile.phone } : null,
       profile.email ? { id: "email", label: "Email", url: `mailto:${profile.email}`, value: profile.email } : null,
-      row.instagram ? { id: "instagram", label: "Instagram", url: row.instagram, value: row.instagram } : null,
-      row.tiktok ? { id: "tiktok", label: "TikTok", url: row.tiktok, value: row.tiktok } : null,
-      row.twitter ? { id: "twitter", label: "Twitter/X", url: row.twitter, value: row.twitter } : null,
-      row.linkedin ? { id: "linkedin", label: "LinkedIn", url: row.linkedin, value: row.linkedin } : null
+      ...buildSocialMediaEntries(row)
     ].filter(Boolean),
     certificates: certificateRows.map(mapCertificateEntry)
   };

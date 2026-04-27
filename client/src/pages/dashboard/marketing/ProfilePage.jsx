@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import Card from "../../../components/atoms/Card";
 import Input from "../../../components/atoms/Input";
-import Select from "../../../components/atoms/Select";
 import Button from "../../../components/atoms/Button";
 import ResourceListPanel from "../../../components/organisms/ResourceListPanel";
 import ResourceRow from "../../../components/molecules/ResourceRow";
 import { useDashboard } from "../../../context/DashboardContext";
 import { JOB_TITLE_OPTIONS } from "../../../config/jobTitles";
+import Select from "../../../components/atoms/Select";
 
 async function readImageDimensions(fileUrl) {
   return new Promise((resolve, reject) => {
@@ -53,7 +53,7 @@ async function hasTransparentPixels(fileUrl, width, height) {
 }
 
 export default function ProfilePage() {
-  const { dashboard, updateProfile } = useDashboard();
+  const { dashboard, updateProfile, updateSocialMedia } = useDashboard();
   const [profileForm, setProfileForm] = useState({
     username: "",
     fullName: "",
@@ -64,11 +64,17 @@ export default function ProfilePage() {
     ecardJobTitle: "",
     description: "",
     phone: "",
-    instagram: "",
-    tiktok: "",
-    twitter: "",
-    linkedin: "",
     photo: ""
+  });
+  const [socialMediaForm, setSocialMediaForm] = useState({
+    instagramUsername: "",
+    instagramUrl: "",
+    tiktokUsername: "",
+    tiktokUrl: "",
+    twitterUsername: "",
+    twitterUrl: "",
+    linkedinUsername: "",
+    linkedinUrl: ""
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
@@ -91,11 +97,17 @@ export default function ProfilePage() {
       ecardJobTitle: profile.ecardJobTitle || "",
       description: profile.description || "",
       phone: profile.phone || "",
-      instagram: profile.instagram || "",
-      tiktok: profile.tiktok || "",
-      twitter: profile.twitter || "",
-      linkedin: profile.linkedin || "",
       photo: profile.photo || ""
+    });
+    setSocialMediaForm({
+      instagramUsername: profile.instagramUsername || "",
+      instagramUrl: profile.instagram || "",
+      tiktokUsername: profile.tiktokUsername || "",
+      tiktokUrl: profile.tiktok || "",
+      twitterUsername: profile.twitterUsername || "",
+      twitterUrl: profile.twitter || "",
+      linkedinUsername: profile.linkedinUsername || "",
+      linkedinUrl: profile.linkedin || "",
     });
     setPhotoFile(null);
     setPhotoPreview(profile.photo || "");
@@ -112,6 +124,13 @@ export default function ProfilePage() {
 
   function handleProfileChange(event) {
     setProfileForm((current) => ({
+      ...current,
+      [event.target.name]: event.target.value
+    }));
+  }
+
+  function handleSocialMediaChange(event) {
+    setSocialMediaForm((current) => ({
       ...current,
       [event.target.name]: event.target.value
     }));
@@ -236,12 +255,17 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleSocialMediaSubmit(event) {
+    event.preventDefault();
+    await updateSocialMedia(socialMediaForm);
+  }
+
   return (
     <div className="space-y-4">
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Biodata</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Kelola data akun, tampilan e-card, dan social media pribadi Anda dari satu form.
+          Kelola biodata marketing dan social media Anda dari form yang sudah dipisah.
         </p>
       </div>
 
@@ -350,30 +374,6 @@ export default function ProfilePage() {
               onChange={handleProfileChange}
               placeholder="Nomor telepon"
             />
-            <Input
-              name="instagram"
-              value={profileForm.instagram}
-              onChange={handleProfileChange}
-              placeholder="URL Instagram"
-            />
-            <Input
-              name="tiktok"
-              value={profileForm.tiktok}
-              onChange={handleProfileChange}
-              placeholder="URL TikTok"
-            />
-            <Input
-              name="twitter"
-              value={profileForm.twitter}
-              onChange={handleProfileChange}
-              placeholder="URL Twitter / X"
-            />
-            <Input
-              name="linkedin"
-              value={profileForm.linkedin}
-              onChange={handleProfileChange}
-              placeholder="URL LinkedIn"
-            />
             <textarea
               name="description"
               value={profileForm.description}
@@ -382,6 +382,72 @@ export default function ProfilePage() {
               className="min-h-28 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white"
             />
             <Button type="submit">Simpan Profil</Button>
+          </form>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-xl font-bold text-slate-900">Social Media Marketing</h3>
+          <form className="mt-5 grid gap-3" onSubmit={handleSocialMediaSubmit}>
+            <p className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
+              Setiap social media punya username dan URL terpisah agar data e-card lebih lengkap.
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                name="instagramUsername"
+                value={socialMediaForm.instagramUsername}
+                onChange={handleSocialMediaChange}
+                placeholder="Username Instagram"
+              />
+              <Input
+                name="instagramUrl"
+                value={socialMediaForm.instagramUrl}
+                onChange={handleSocialMediaChange}
+                placeholder="URL Instagram"
+              />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                name="tiktokUsername"
+                value={socialMediaForm.tiktokUsername}
+                onChange={handleSocialMediaChange}
+                placeholder="Username TikTok"
+              />
+              <Input
+                name="tiktokUrl"
+                value={socialMediaForm.tiktokUrl}
+                onChange={handleSocialMediaChange}
+                placeholder="URL TikTok"
+              />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                name="twitterUsername"
+                value={socialMediaForm.twitterUsername}
+                onChange={handleSocialMediaChange}
+                placeholder="Username Twitter / X"
+              />
+              <Input
+                name="twitterUrl"
+                value={socialMediaForm.twitterUrl}
+                onChange={handleSocialMediaChange}
+                placeholder="URL Twitter / X"
+              />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                name="linkedinUsername"
+                value={socialMediaForm.linkedinUsername}
+                onChange={handleSocialMediaChange}
+                placeholder="Username LinkedIn"
+              />
+              <Input
+                name="linkedinUrl"
+                value={socialMediaForm.linkedinUrl}
+                onChange={handleSocialMediaChange}
+                placeholder="URL LinkedIn"
+              />
+            </div>
+            <Button type="submit">Simpan Social Media</Button>
           </form>
         </Card>
 
@@ -404,7 +470,8 @@ export default function ProfilePage() {
           renderItem={(entry) => (
             <ResourceRow>
               <strong className="text-base text-slate-900">{entry.platform}</strong>
-              <span className="break-all">{entry.url}</span>
+              <span>{entry.username || "-"}</span>
+              <span className="break-all">{entry.url || "-"}</span>
             </ResourceRow>
           )}
         />
