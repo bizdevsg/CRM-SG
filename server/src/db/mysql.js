@@ -1,19 +1,21 @@
 import mysql from "mysql2/promise";
 
-const mysqlConfig = {
-  host: process.env.MYSQL_HOST || "127.0.0.1",
-  port: Number(process.env.MYSQL_PORT) || 3306,
-  user: process.env.MYSQL_USER || "root",
-  password: process.env.MYSQL_PASSWORD || "",
-  database: process.env.MYSQL_DATABASE || "ecard_platform_db"
-};
+function readMysqlConfig() {
+  return {
+    host: process.env.MYSQL_HOST || "127.0.0.1",
+    port: Number(process.env.MYSQL_PORT) || 3306,
+    user: process.env.MYSQL_USER || "root",
+    password: process.env.MYSQL_PASSWORD || "",
+    database: process.env.MYSQL_DATABASE || "ecard_platform_db"
+  };
+}
 
 let pool;
 
 function createPool() {
   if (!pool) {
     pool = mysql.createPool({
-      ...mysqlConfig,
+      ...readMysqlConfig(),
       waitForConnections: true,
       connectionLimit: 10,
       namedPlaceholders: true
@@ -24,9 +26,7 @@ function createPool() {
 }
 
 export function getMysqlConfig() {
-  return {
-    ...mysqlConfig
-  };
+  return readMysqlConfig();
 }
 
 export function getPool() {
