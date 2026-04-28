@@ -236,7 +236,7 @@ export default function RfbContainer({
             <button
               type="button"
               disabled
-              title="Fitur download file akan ditambahkan nanti"
+              title="Download"
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FontAwesomeIcon icon={faDownload} className="text-2xl" />
