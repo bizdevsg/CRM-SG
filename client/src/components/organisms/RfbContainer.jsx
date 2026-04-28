@@ -132,6 +132,10 @@ export default function RfbContainer({
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const videoPreviewUrl = getRfbVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
+  const activeSectionIndex = Math.max(
+    sectionNavItems.findIndex((item) => item.id === activeSection),
+    0,
+  );
 
   return (
     <div
@@ -140,7 +144,16 @@ export default function RfbContainer({
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
         <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="relative grid grid-cols-4 gap-2">
+            <div
+              className="pointer-events-none absolute bottom-0 top-0 z-0 rounded-2xl bg-red-900 shadow-[0_14px_28px_rgba(127,29,29,0.28)] transition-transform duration-300 ease-out"
+              style={{
+                width: "calc(25% - 0.375rem)",
+                transform: `translateX(calc(${activeSectionIndex * 100}% + ${
+                  activeSectionIndex * 0.5
+                }rem))`,
+              }}
+            />
             {sectionNavItems.map((item) => {
               const isActive = activeSection === item.id;
 
@@ -150,17 +163,17 @@ export default function RfbContainer({
                   type="button"
                   onClick={() => onSectionNavigate(item.id)}
                   aria-current={isActive ? "true" : "false"}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-all duration-200 ${
-                    isActive
-                      ? "bg-red-900 text-white shadow-[0_14px_28px_rgba(127,29,29,0.28)]"
-                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                  className={`relative z-10 flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-colors duration-300 ${
+                    isActive ? "text-white" : "text-zinc-400 hover:text-zinc-700"
                   }`}
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
-                    className={`text-[1.35rem] ${isActive ? "text-white" : "text-zinc-400"}`}
+                    className={`text-[1.35rem] transition-colors duration-300 ${
+                      isActive ? "text-white" : "text-zinc-400"
+                    }`}
                   />
-                  <span className="mt-2 text-sm font-bold leading-tight sm:text-[15px]">
+                  <span className="mt-2 text-xs font-bold leading-tight transition-colors duration-300">
                     {item.label}
                   </span>
                 </button>

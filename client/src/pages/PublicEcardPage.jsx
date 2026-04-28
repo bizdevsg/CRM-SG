@@ -152,6 +152,21 @@ export default function PublicEcardPage() {
   const [error, setError] = useState("");
   const [activeSection, setActiveSection] = useState("profile");
   const sectionRefs = useRef({});
+  const scrollAnimationFrameRef = useRef(null);
+  const autoScrollingRef = useRef(false);
+  const autoScrollReleaseTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (scrollAnimationFrameRef.current) {
+        window.cancelAnimationFrame(scrollAnimationFrameRef.current);
+      }
+
+      if (autoScrollReleaseTimeoutRef.current) {
+        window.clearTimeout(autoScrollReleaseTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -213,6 +228,10 @@ export default function PublicEcardPage() {
 
     const observer = new IntersectionObserver(
       (entries) => {
+        if (autoScrollingRef.current) {
+          return;
+        }
+
         const visibleEntry = entries
           .filter((entry) => entry.isIntersecting)
           .sort(
@@ -245,6 +264,59 @@ export default function PublicEcardPage() {
     };
   }
 
+  function releaseAutoScrollLock() {
+    if (autoScrollReleaseTimeoutRef.current) {
+      window.clearTimeout(autoScrollReleaseTimeoutRef.current);
+    }
+
+    autoScrollReleaseTimeoutRef.current = window.setTimeout(() => {
+      autoScrollingRef.current = false;
+    }, 120);
+  }
+
+  function animateScrollTo(targetTop) {
+    if (scrollAnimationFrameRef.current) {
+      window.cancelAnimationFrame(scrollAnimationFrameRef.current);
+    }
+
+    if (autoScrollReleaseTimeoutRef.current) {
+      window.clearTimeout(autoScrollReleaseTimeoutRef.current);
+    }
+
+    const startTop = window.scrollY;
+    const distance = targetTop - startTop;
+
+    if (Math.abs(distance) < 4) {
+      window.scrollTo({ top: targetTop });
+      autoScrollingRef.current = false;
+      return;
+    }
+
+    const duration = Math.min(900, Math.max(420, Math.abs(distance) * 0.45));
+    const startTime = window.performance.now();
+    autoScrollingRef.current = true;
+
+    function step(currentTime) {
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      const easedProgress = 1 - (1 - progress) ** 3;
+
+      window.scrollTo({
+        top: startTop + distance * easedProgress,
+      });
+
+      if (progress < 1) {
+        scrollAnimationFrameRef.current = window.requestAnimationFrame(step);
+        return;
+      }
+
+      window.scrollTo({ top: targetTop });
+      scrollAnimationFrameRef.current = null;
+      releaseAutoScrollLock();
+    }
+
+    scrollAnimationFrameRef.current = window.requestAnimationFrame(step);
+  }
+
   function handleSectionNavigate(sectionId) {
     const targetSection = sectionRefs.current[sectionId];
 
@@ -263,10 +335,7 @@ export default function PublicEcardPage() {
       "",
       `${window.location.pathname}${window.location.search}#${sectionId}`,
     );
-    window.scrollTo({
-      top: targetTop,
-      behavior: "smooth",
-    });
+    animateScrollTo(targetTop);
   }
 
   if (loading) {
