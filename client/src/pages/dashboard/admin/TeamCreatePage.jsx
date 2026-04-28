@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Card from "../../../components/atoms/Card";
 import ManagedUserForm from "../../../components/organisms/ManagedUserForm";
+import MarketingCsvImportPanel from "../../../components/organisms/MarketingCsvImportPanel";
 import { useDashboard } from "../../../context/DashboardContext";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -8,6 +9,9 @@ export default function TeamCreatePage() {
   const { dashboard, createMarketing } = useDashboard();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const adminBranches = dashboard?.branches?.length
+    ? dashboard.branches
+    : [dashboard?.branch].filter(Boolean);
 
   async function handleSubmit(payload) {
     const success = await createMarketing(payload);
@@ -26,10 +30,18 @@ export default function TeamCreatePage() {
         </p>
       </div>
 
+      <MarketingCsvImportPanel
+        companies={dashboard?.companies || []}
+        branches={adminBranches}
+        users={[...(dashboard?.marketingTeam || []), ...(user ? [user] : [])]}
+        fixedCompanyId={user?.companyId || null}
+        fixedBranchId={user?.branchId || null}
+      />
+
       <Card className="p-6">
         <ManagedUserForm
           companies={dashboard?.companies || []}
-          branches={dashboard?.branches || []}
+          branches={adminBranches}
           users={[...(dashboard?.marketingTeam || []), ...(user ? [user] : [])]}
           initialValues={{
             name: "",

@@ -3,12 +3,15 @@ import Button from "../../../components/atoms/Button";
 import ResourceListPanel from "../../../components/organisms/ResourceListPanel";
 import ResourceRow from "../../../components/molecules/ResourceRow";
 import { useDashboard } from "../../../context/DashboardContext";
+import { getIncompleteEcardFields } from "../../../utils/ecardProfile";
 
 export default function EcardsPage() {
   const { dashboard, deleteEcard } = useDashboard();
   const navigate = useNavigate();
   const ecards = dashboard?.resources?.ecards || [];
   const hasEcard = ecards.length > 0;
+  const incompleteFields = getIncompleteEcardFields(dashboard?.resources?.profile || {});
+  const canGenerateEcard = incompleteFields.length === 0;
 
   return (
     <div className="space-y-4">
@@ -17,6 +20,11 @@ export default function EcardsPage() {
         <p className="mt-2 text-sm leading-6 text-slate-500">
           Setiap marketing hanya memiliki 1 QR e-card untuk profil publiknya.
         </p>
+        {!hasEcard && !canGenerateEcard ? (
+          <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+            QR belum bisa digenerate. Lengkapi dulu: {incompleteFields.join(", ")}.
+          </p>
+        ) : null}
       </div>
 
       <ResourceListPanel
@@ -27,6 +35,7 @@ export default function EcardsPage() {
           hasEcard ? null : (
             <Button
               className="px-4 py-2"
+              disabled={!canGenerateEcard}
               onClick={() => navigate("/dashboard/ecards/new")}
             >
               Generate QR

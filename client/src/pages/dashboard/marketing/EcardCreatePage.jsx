@@ -7,6 +7,7 @@ export default function EcardCreatePage() {
   const { dashboard, createEcard } = useDashboard();
   const navigate = useNavigate();
   const existingEcard = (dashboard?.resources?.ecards || [])[0];
+  const profile = dashboard?.resources?.profile || {};
 
   async function handleSubmit(payload) {
     const success = await createEcard(payload);
@@ -25,13 +26,13 @@ export default function EcardCreatePage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Generate QR E-Card</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Buat satu QR e-card untuk profil publik Anda.
+          Buat satu QR e-card untuk profil publik Anda dengan slug otomatis dari nomor izin dan nama.
         </p>
       </div>
 
       <Card className="p-6">
         <EcardForm
-          initialValues={{ title: "", slug: "" }}
+          profile={profile}
           onSubmit={handleSubmit}
           submitLabel="Generate QR"
         />

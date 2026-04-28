@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Card from "../../../components/atoms/Card";
 import ManagedUserForm from "../../../components/organisms/ManagedUserForm";
+import MarketingCsvImportPanel from "../../../components/organisms/MarketingCsvImportPanel";
 import { useDashboard } from "../../../context/DashboardContext";
 
 export default function MarketingCreatePage() {
@@ -23,6 +24,12 @@ export default function MarketingCreatePage() {
           Buat akun marketing baru untuk PT dan cabang tertentu.
         </p>
       </div>
+
+      <MarketingCsvImportPanel
+        companies={dashboard?.companies || []}
+        branches={dashboard?.branches || []}
+        users={[...(dashboard?.admins || []), ...(dashboard?.marketingTeam || [])]}
+      />
 
       <Card className="p-6">
         <ManagedUserForm

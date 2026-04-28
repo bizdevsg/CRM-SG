@@ -185,21 +185,19 @@ router.delete("/me/certificates/:entryId", async (req, res) => {
 });
 
 router.post("/me/ecards", async (req, res) => {
-  const { title, slug } = req.body;
-
-  if (!title) {
-    return res.status(400).json({
-      message: "Judul e-card wajib diisi."
-    });
-  }
-
   let entry;
 
   try {
-    entry = await createEcardEntry(req.user.id, { title, slug });
+    entry = await createEcardEntry(req.user.id, {});
   } catch (error) {
     if (error.message === "Setiap marketing hanya boleh memiliki 1 QR e-card.") {
       return res.status(409).json({
+        message: error.message
+      });
+    }
+
+    if (error.message.startsWith("QR e-card belum bisa dibuat.")) {
+      return res.status(400).json({
         message: error.message
       });
     }
@@ -214,19 +212,23 @@ router.post("/me/ecards", async (req, res) => {
 });
 
 router.put("/me/ecards/:entryId", async (req, res) => {
-  const { title, slug, isActive } = req.body;
+  const { isActive } = req.body;
 
-  if (!title && !slug) {
-    return res.status(400).json({
-      message: "Judul atau slug e-card wajib diisi."
+  let entry;
+
+  try {
+    entry = await updateEcardEntry(req.user.id, req.params.entryId, {
+      isActive: isActive !== undefined ? Boolean(isActive) : true
     });
-  }
+  } catch (error) {
+    if (error.message.startsWith("QR e-card belum bisa diperbarui.")) {
+      return res.status(400).json({
+        message: error.message
+      });
+    }
 
-  const entry = await updateEcardEntry(req.user.id, req.params.entryId, {
-    title,
-    slug,
-    isActive: isActive !== undefined ? Boolean(isActive) : true
-  });
+    throw error;
+  }
 
   if (!entry) {
     return res.status(404).json({

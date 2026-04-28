@@ -80,6 +80,7 @@ export default function BestprofitContainer({
   vcardHref,
   vcardName,
   infoItems,
+  certificates,
   certificateImageSrc,
   certificateImageAlt,
   branch,
@@ -92,7 +93,7 @@ export default function BestprofitContainer({
       className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-white"
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
-        <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
+        <div className="border border-white bg-white px-3 pb-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
           <div className="grid grid-cols-4 gap-2">
             {sectionNavItems.map((item) => {
               const isActive = activeSection === item.id;
@@ -103,15 +104,15 @@ export default function BestprofitContainer({
                   type="button"
                   onClick={() => onSectionNavigate(item.id)}
                   aria-current={isActive ? "true" : "false"}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-all duration-200 ${
+                  className={`flex cursor-pointer flex-col items-center justify-center px-2 py-3 text-center transition-all duration-200 ${
                     isActive
-                      ? "bg-sky-700 text-white shadow-[0_14px_28px_rgba(3,105,161,0.28)]"
-                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                      ? "border-t-4 border-sky-700"
+                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 hover:border-t-4 hover:border-sky-700"
                   }`}
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
-                    className={`text-[1.35rem] ${isActive ? "text-white" : "text-zinc-400"}`}
+                    className={`text-[1.35rem] ${isActive ? "text-sky-700" : "text-zinc-400"}`}
                   />
                   <span className="mt-2 text-sm font-bold leading-tight sm:text-[15px]">
                     {item.label}
@@ -154,9 +155,9 @@ export default function BestprofitContainer({
               )}
             </div>
 
-            <div className="absolute bottom-0 z-50 w-full bg-linear-0 from-sky-900 to-transparent p-4 pt-10 text-white">
+            <div className="absolute bottom-0 z-50 w-full bg-linear-0 from-sky-900 via-sky-900 to-transparent p-4 pt-10 text-white">
               <div className="flex items-center gap-1 bg-sky-500 rounded-full w-fit px-2 py-0.5">
-                <img src={verifiedBadge} alt="Logo Verified" className="h-5" />
+                <img src={verifiedBadge} alt="Logo Verified" className="h-4" />
                 <p className="uppercase font-bold text-white">Verified</p>
               </div>
               <h1 className="text-2xl font-bold drop-shadow-lg md:text-3xl">
@@ -225,20 +226,33 @@ export default function BestprofitContainer({
         <section
           id="legality"
           ref={registerSection("legality")}
-          className="space-y-4 bg-sky-50/70 m-4 p-4 border border-sky-300 rounded-2xl"
+          className="space-y-4 m-4 p-4 border border-sky-200 rounded-3xl"
         >
           <div className="flex items-center justify-between">
             <h5 className="text-2xl font-bold">Regulatory Status</h5>
           </div>
 
           <div className="mt-7">
-            <div className="overflow-hidden rounded-3xl bg-white p-2 shadow">
-              <img
-                src={certificateImageSrc}
-                alt={certificateImageAlt}
-                className="h-full overflow-hidden rounded-2xl"
-              />
-            </div>
+            {certificates?.length ? (
+              <div className="space-y-4">
+                {certificates.map((certificate) => (
+                  <div
+                    key={certificate.id}
+                    className="overflow-hidden rounded-2xl shadow"
+                  >
+                    <img
+                      src={certificate.imagePath}
+                      alt={certificate.title || "Sertifikat"}
+                      className="h-full overflow-hidden rounded-2xl"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-sky-200 bg-white/80 px-4 py-5 text-sm text-slate-500">
+                Sertifikat belum tersedia.
+              </div>
+            )}
           </div>
         </section>
 

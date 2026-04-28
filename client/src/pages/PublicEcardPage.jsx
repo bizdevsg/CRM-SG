@@ -409,6 +409,7 @@ export default function PublicEcardPage() {
         vcardHref={vcardHref}
         vcardName={vcardName}
         infoItems={infoItems}
+        certificates={certificates}
         certificateImageSrc={certificateImageSrc}
         certificateImageAlt={certificateImageAlt}
         branch={branch}

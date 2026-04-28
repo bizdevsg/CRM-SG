@@ -9,6 +9,7 @@ export default function EcardEditPage() {
   const { dashboard, loading, updateEcard } = useDashboard();
   const navigate = useNavigate();
   const ecard = (dashboard?.resources?.ecards || []).find((item) => String(item.id) === String(ecardId));
+  const profile = dashboard?.resources?.profile || {};
 
   async function handleSubmit(payload) {
     const success = await updateEcard(ecardId, payload);
@@ -31,16 +32,13 @@ export default function EcardEditPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Edit E-Card</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Perbarui slug dan QR code e-card milik Anda.
+          Regenerasi slug dan QR code e-card otomatis dari nomor izin dan nama terbaru Anda.
         </p>
       </div>
 
       <Card className="p-6">
         <EcardForm
-          initialValues={{
-            title: ecard.title || "",
-            slug: ecard.slug || ""
-          }}
+          profile={profile}
           onSubmit={handleSubmit}
           submitLabel="Perbarui QR"
         />

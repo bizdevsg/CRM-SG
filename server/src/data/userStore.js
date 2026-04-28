@@ -27,6 +27,59 @@ function buildUsername(name, email) {
   return base || fallback;
 }
 
+function buildAutomaticEcardSlug(user) {
+  const slugSource = [user?.licenseNumber, user?.name]
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .join(" ");
+
+  return slugify(slugSource || user?.username || `marketing-${user?.id || ""}`);
+}
+
+function getIncompleteEcardFields(user) {
+  const requiredFields = [
+    { label: "nama lengkap", value: user?.name },
+    { label: "email", value: user?.email },
+    { label: "nomor izin", value: user?.licenseNumber },
+    { label: "jabatan e-card atau jabatan asli", value: user?.ecardJobTitle || user?.positionTitle },
+    { label: "deskripsi profil", value: user?.description },
+    { label: "nomor telepon", value: user?.phone },
+    { label: "foto profil", value: user?.photo },
+    { label: "perusahaan", value: user?.companyName },
+    { label: "cabang", value: user?.branchName }
+  ];
+
+  return requiredFields
+    .filter((field) => !String(field.value || "").trim())
+    .map((field) => field.label);
+}
+
+async function resolveAvailableEcardSlug(user, excludeEntryId = null) {
+  const baseSlug = buildAutomaticEcardSlug(user) || `marketing-${user.id}`;
+  let suffix = 0;
+
+  while (true) {
+    const candidateSlug =
+      suffix === 0
+        ? baseSlug
+        : `${baseSlug}-${suffix === 1 ? user.id : `${user.id}-${suffix}`}`;
+    const rows = await query(
+      `SELECT id, user_id
+        FROM ecards
+        WHERE slug = ?
+          ${excludeEntryId ? "AND id <> ?" : ""}
+        LIMIT 1`,
+      excludeEntryId ? [candidateSlug, excludeEntryId] : [candidateSlug]
+    );
+
+    if (!rows.length || Number(rows[0].user_id) === Number(user.id)) {
+      return candidateSlug;
+    }
+
+    suffix += 1;
+  }
+}
+
 function getClientBaseUrl() {
   const configuredUrl = String(process.env.CLIENT_URL || "http://localhost:5173")
     .split(",")[0]
@@ -1073,7 +1126,15 @@ export async function createEcardEntry(userId, payload) {
   }
 
   const user = mapUserRow(await getUserBaseRowById(userId));
-  const slug = slugify(payload.slug || payload.title || user?.username || user?.name);
+  const incompleteFields = getIncompleteEcardFields(user);
+
+  if (incompleteFields.length > 0) {
+    throw new Error(
+      `QR e-card belum bisa dibuat. Lengkapi data berikut terlebih dahulu: ${incompleteFields.join(", ")}.`
+    );
+  }
+
+  const slug = await resolveAvailableEcardSlug(user);
   const publicUrl = buildPublicEcardUrl({
     ...user,
     slug
@@ -1110,7 +1171,15 @@ export async function updateEcardEntry(userId, entryId, payload) {
   }
 
   const user = mapUserRow(await getUserBaseRowById(userId));
-  const slug = slugify(payload.slug || payload.title || user?.username || user?.name);
+  const incompleteFields = getIncompleteEcardFields(user);
+
+  if (incompleteFields.length > 0) {
+    throw new Error(
+      `QR e-card belum bisa diperbarui. Lengkapi data berikut terlebih dahulu: ${incompleteFields.join(", ")}.`
+    );
+  }
+
+  const slug = await resolveAvailableEcardSlug(user, entryId);
   const publicUrl = buildPublicEcardUrl({
     ...user,
     slug

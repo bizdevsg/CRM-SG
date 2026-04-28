@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAddressBook,
   faCheckCircle,
+  faCircleXmark,
   faDownload,
   faGlobe,
+  faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 import riffanBg from "../../assets/RFB BCG 1.png";
 import verifiedBadge from "../../assets/ic_round-verified.png";
@@ -20,6 +23,9 @@ const SOCIAL_MEDIA_IMAGE_BY_ID = {
   instagram: instagramIcon,
   linkedin: linkedinIcon,
 };
+
+const RFB_COMPANY_PROFILE_URL =
+  "https://www.youtube.com/embed/049Pdi7X2Ns?si=YOaaHf_NUW38Yp3g";
 
 function getInitials(name) {
   return String(name || "")
@@ -66,6 +72,43 @@ function getSocialMediaDisplayValue(value) {
     .replace(/\/+$/g, "");
 }
 
+function getRfbVideoEmbedUrl(url) {
+  const value = String(url || "").trim();
+
+  if (!value) {
+    return RFB_COMPANY_PROFILE_URL;
+  }
+
+  try {
+    const parsedUrl = new URL(value);
+    const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+
+    if (hostname === "youtube.com" || hostname === "m.youtube.com") {
+      if (parsedUrl.pathname.startsWith("/embed/")) {
+        return value;
+      }
+
+      if (parsedUrl.pathname === "/watch") {
+        const videoId = parsedUrl.searchParams.get("v");
+        return videoId
+          ? `https://www.youtube.com/embed/${videoId}`
+          : RFB_COMPANY_PROFILE_URL;
+      }
+    }
+
+    if (hostname === "youtu.be") {
+      const videoId = parsedUrl.pathname.split("/").filter(Boolean)[0];
+      return videoId
+        ? `https://www.youtube.com/embed/${videoId}`
+        : RFB_COMPANY_PROFILE_URL;
+    }
+  } catch {
+    return RFB_COMPANY_PROFILE_URL;
+  }
+
+  return RFB_COMPANY_PROFILE_URL;
+}
+
 export default function RfbContainer({
   activeSection,
   sectionNavItems,
@@ -79,16 +122,21 @@ export default function RfbContainer({
   vcardHref,
   vcardName,
   infoItems,
+  certificates,
   certificateImageSrc,
   certificateImageAlt,
   branch,
   corporateStats,
   socialMediaItems,
 }) {
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const videoPreviewUrl = getRfbVideoEmbedUrl(companyVideoUrl);
+  const hasVideoSource = Boolean(videoPreviewUrl);
+
   return (
     <div
       data-company-theme="riffan"
-      className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-white"
+      className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-zinc-50"
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
         <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
@@ -184,34 +232,32 @@ export default function RfbContainer({
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <a
-              href={companyVideoUrl || "#"}
-              onClick={
-                companyVideoUrl ? undefined : (event) => event.preventDefault()
-              }
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white"
-              {...renderLinkTarget(companyVideoUrl)}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              disabled
+              title="Fitur download file akan ditambahkan nanti"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FontAwesomeIcon icon={faDownload} className="text-2xl" />
-              <span className="w-fit text-center text-wrap md:text-lg">
-                Download Company Brochure
+              <span className="w-fit text-center font-semibold text-wrap">
+                Download Company Profile
               </span>
-            </a>
+            </button>
 
             <a
               href={vcardHref}
               download={`${vcardName || "contact"}.vcf`}
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 px-5 py-2 text-red-800"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 px-5 py-2 text-red-800 cursor-pointer"
             >
               <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
-              <span className="w-fit text-center text-wrap md:text-lg">
+              <span className="w-fit text-cente font-semibold text-wrap">
                 Save Contact
               </span>
             </a>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-5 space-y-4">
             <h5 className="text-2xl font-bold">Profile</h5>
             <p className="text-justify md:text-lg">
               {profile?.description || "Tidak ada deskripsi profil."}
@@ -242,19 +288,40 @@ export default function RfbContainer({
         >
           <div className="flex items-center justify-between">
             <h5 className="text-2xl font-bold">Legal Integrity</h5>
-            <div className="w-fit rounded-full border border-green-400 bg-green-200 px-2 py-1 text-green-800">
+            <div className="w-fit rounded-full border border-green-400 bg-green-200 px-2 py-1 font-semibold text-green-800">
               Verified <FontAwesomeIcon icon={faCheckCircle} />
             </div>
           </div>
 
           <div className="mt-7">
-            <div className="overflow-hidden rounded-3xl bg-white p-2 shadow">
-              <img
-                src={certificateImageSrc}
-                alt={certificateImageAlt}
-                className="w-full overflow-hidden rounded-2xl"
-              />
-            </div>
+            {certificates?.length ? (
+              <div className="space-y-4">
+                {certificates.map((certificate) => (
+                  <div
+                    key={certificate.id}
+                    className="overflow-hidden rounded-3xl bg-white p-2 shadow"
+                  >
+                    <img
+                      src={certificate.imagePath}
+                      alt={certificate.title || "Sertifikat"}
+                      className="w-full overflow-hidden rounded-2xl"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : certificateImageSrc ? (
+              <div className="overflow-hidden rounded-3xl bg-white p-2 shadow">
+                <img
+                  src={certificateImageSrc}
+                  alt={certificateImageAlt}
+                  className="w-full overflow-hidden rounded-2xl"
+                />
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-zinc-300 bg-white/80 px-4 py-5 text-sm text-zinc-500">
+                Sertifikat belum tersedia.
+              </div>
+            )}
           </div>
         </section>
 
@@ -267,15 +334,18 @@ export default function RfbContainer({
             <h5 className="text-2xl font-bold">Corporate Heritage</h5>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-8 mt-5">
             <div className="space-y-2">
               <h6 className="text-xl font-bold text-red-800">
                 {company?.name || "Profil Perusahaan"}
               </h6>
 
-              <p className="text-justify md:text-lg">
-                {company?.description ||
-                  "Pialang berjangka resmi yang menghadirkan layanan investasi yang aman, terpercaya, dan profesional untuk mendukung aktivitas pemasaran dan edukasi nasabah."}
+              <p className="">
+                Pialang berjangka resmi yang diawasi BAPPEBTI, OJK, dan BI,
+                menghadirkan layanan investasi yang aman, terpercaya, dan
+                profesional. Didukung pengalaman lebih dari 20 tahun, kami
+                menjadi salah satu pelaku utama di industri Perdagangan
+                Berjangka Komoditi di Indonesia.
               </p>
             </div>
 
@@ -292,7 +362,7 @@ export default function RfbContainer({
                   key={item.id}
                   className="flex flex-col items-center justify-center bg-white p-4"
                 >
-                  <h5 className="break-words text-2xl font-bold text-red-800 md:text-3xl">
+                  <h5 className="break-words text-2xl font-bold text-red-700 md:text-3xl">
                     {item.value}
                   </h5>
                   <p className="font-semibold text-zinc-400 md:text-xl">
@@ -303,16 +373,23 @@ export default function RfbContainer({
             </div>
 
             <div className="overflow-hidden rounded-3xl">
-              {companyVideoUrl ? (
-                <a
-                  href={companyVideoUrl}
-                  {...renderLinkTarget(companyVideoUrl)}
-                >
-                  <img src={MediaPlaceholder} alt="Media Placeholder" />
-                </a>
-              ) : (
-                <img src={MediaPlaceholder} alt="Media Placeholder" />
-              )}
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(true)}
+                disabled={!hasVideoSource}
+                className="relative block w-full overflow-hidden rounded-3xl aspect-video cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition hover:bg-black/28">
+                  <div className="flex items-center gap-3 rounded-full bg-white/50 backdrop-blur-xs p-5 h-15 w-15 text-sm font-semibold text-white shadow-lg border border-white">
+                    <FontAwesomeIcon icon={faPlay} className="text-2xl" />
+                  </div>
+                </div>
+                <img
+                  src={MediaPlaceholder}
+                  alt="Media Placeholder"
+                  className="w-full object-cover"
+                />
+              </button>
             </div>
           </div>
         </section>
@@ -387,6 +464,42 @@ export default function RfbContainer({
           </div>
         </div>
       </div>
+
+      {videoModalOpen && hasVideoSource ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setVideoModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-xl bg-white p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(false)}
+                className="flex items-center justify-end rounded-full text-[#dd2c00] shadow-[0_10px_24px_rgba(221,44,0,0.3)] transition hover:scale-105 cursor-pointer"
+                aria-label="Tutup video"
+              >
+                <FontAwesomeIcon icon={faCircleXmark} className="text-lg" />
+              </button>
+            </div>
+
+            <div className="overflow-hidden rounded-lg bg-slate-950 mt-4 shadow-[0_18px_40px_rgba(15,23,42,0.16)]">
+              <div className="aspect-video w-full bg-black">
+                <iframe
+                  className="block h-full w-full"
+                  src={videoPreviewUrl}
+                  title={`${company?.name || "RFB"} Company Profile`}
+                  allow="autoplay; fullscreen"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
