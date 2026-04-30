@@ -1,10 +1,5 @@
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAddressBook,
-  faCheckCircle,
-  faDownload,
-  faGlobe,
-} from "@fortawesome/free-solid-svg-icons";
 import verifiedBadge from "../../assets/logoverif-putih.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
 import MediaPlaceholder from "../../assets/MediaPlaceholderBPF.png";
@@ -15,12 +10,16 @@ import linkedinIcon from "../../assets/ri_linkedin-box-fill.png";
 import safeAlertFill from "../../assets/mingcute_safe-alert-line.png";
 import LogoBPF from "../../assets/logoBPF.png";
 import logoBPF2 from "../../assets/LOGO-BPF-2.png";
+import { byPrefixAndName } from "../../utils/fontawesome";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   linkedin: linkedinIcon,
 };
+
+const BESTPROFIT_COMPANY_PROFILE_URL =
+  "https://www.youtube.com/embed/H0o0szp8_rE?si=lpVgqHmyNeedN5sc";
 
 function getInitials(name) {
   return String(name || "")
@@ -67,6 +66,43 @@ function getSocialMediaDisplayValue(value) {
     .replace(/\/+$/g, "");
 }
 
+function getBestprofitVideoEmbedUrl(url) {
+  const value = String(url || "").trim();
+
+  if (!value) {
+    return BESTPROFIT_COMPANY_PROFILE_URL;
+  }
+
+  try {
+    const parsedUrl = new URL(value);
+    const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+
+    if (hostname === "youtube.com" || hostname === "m.youtube.com") {
+      if (parsedUrl.pathname.startsWith("/embed/")) {
+        return value;
+      }
+
+      if (parsedUrl.pathname === "/watch") {
+        const videoId = parsedUrl.searchParams.get("v");
+        return videoId
+          ? `https://www.youtube.com/embed/${videoId}`
+          : BESTPROFIT_COMPANY_PROFILE_URL;
+      }
+    }
+
+    if (hostname === "youtu.be") {
+      const videoId = parsedUrl.pathname.split("/").filter(Boolean)[0];
+      return videoId
+        ? `https://www.youtube.com/embed/${videoId}`
+        : BESTPROFIT_COMPANY_PROFILE_URL;
+    }
+  } catch {
+    return BESTPROFIT_COMPANY_PROFILE_URL;
+  }
+
+  return BESTPROFIT_COMPANY_PROFILE_URL;
+}
+
 export default function BestprofitContainer({
   activeSection,
   sectionNavItems,
@@ -87,6 +123,10 @@ export default function BestprofitContainer({
   corporateStats,
   socialMediaItems,
 }) {
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const videoPreviewUrl = getBestprofitVideoEmbedUrl(companyVideoUrl);
+  const hasVideoSource = Boolean(videoPreviewUrl);
+
   return (
     <div
       data-company-theme="bestprofit"
@@ -172,31 +212,56 @@ export default function BestprofitContainer({
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <a
               href={companyVideoUrl || "#"}
               onClick={
                 companyVideoUrl ? undefined : (event) => event.preventDefault()
               }
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-sky-700 px-7 py-2 text-white"
+              className="inline-flex flex-col w-full items-center justify-center gap-1 rounded-xl border border-sky-200 px-5 py-4 text-sky-800 hover:bg-slate-100 transition-all"
               {...renderLinkTarget(companyVideoUrl)}
             >
-              <FontAwesomeIcon icon={faDownload} className="text-2xl" />
-              <span className="w-fit text-center text-wrap md:text-lg">
-                Download Company Brochure
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas.download}
+                className="text-2xl"
+              />
+              <span className="w-fit text-center text-wrap">
+                Company Profile Brochure
               </span>
             </a>
 
             <a
               href={vcardHref}
               download={`${vcardName || "contact"}.vcf`}
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-sky-200 px-5 py-2 text-sky-800"
+              className="inline-flex flex-col w-full items-center justify-center gap-1 rounded-xl bg-sky-900 hover:bg-sky-800 px-7 py-4 text-white transition-all"
             >
-              <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas["address-book"]}
+                className="text-2xl"
+              />
               <span className="w-fit text-center text-wrap md:text-lg">
                 Save Contact
               </span>
             </a>
+          </div>
+
+          <div className="border-y border-sky-200 py-4">
+            <div className="flex items-center justify-between gap-3 px-10">
+              <div className="flex flex-col items-center">
+                <h6 className="text-red-500 font-semibold">10+</h6>
+                <p className="uppercase text-zinc-500 font-bold">Years EXP</p>
+              </div>
+              <div className="min-h-10 w-px bg-sky-200" />
+              <div className="flex flex-col items-center">
+                <h6 className="text-red-500 font-semibold">500+</h6>
+                <p className="uppercase text-zinc-500 font-bold">CLIENTS</p>
+              </div>
+              <div className="min-h-10 w-px bg-sky-200" />
+              <div className="flex flex-col items-center">
+                <h6 className="text-red-500 font-semibold">A+</h6>
+                <p className="uppercase text-zinc-500 font-bold">RATING</p>
+              </div>
+            </div>
           </div>
 
           <div className="mt-5">
@@ -213,8 +278,8 @@ export default function BestprofitContainer({
                 className="rounded-3xl border border-sky-200 bg-sky-50 py-2 px-3 text-center"
               >
                 <div className="flex h-full items-center gap-1 justify-center">
-                  <img src={item.img} alt={item.label} className="h-7" />
-                  <p className="font-semibold text-black text-sm md:text-lg">
+                  <img src={item.img} alt={item.label} className="h-6" />
+                  <p className="font-semibold text-black text-sm">
                     {item.label}
                   </p>
                 </div>
@@ -321,13 +386,26 @@ export default function BestprofitContainer({
           </div>
 
           <div className="overflow-hidden rounded-3xl border-2 border-sky-900">
-            {companyVideoUrl ? (
-              <a href={companyVideoUrl} {...renderLinkTarget(companyVideoUrl)}>
-                <img src={MediaPlaceholder} alt="Media Placeholder" />
-              </a>
-            ) : (
-              <img src={MediaPlaceholder} alt="Media Placeholder" />
-            )}
+            <button
+              type="button"
+              onClick={() => setVideoModalOpen(true)}
+              disabled={!hasVideoSource}
+              className="relative block aspect-video w-full overflow-hidden cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition hover:bg-black/28">
+                <div className="flex h-15 w-15 items-center justify-center rounded-full border border-white bg-white/50 p-5 text-sm font-semibold text-white shadow-lg backdrop-blur-xs">
+                  <FontAwesomeIcon
+                    icon={byPrefixAndName.fas.play}
+                    className="text-2xl"
+                  />
+                </div>
+              </div>
+              <img
+                src={MediaPlaceholder}
+                alt="Media Placeholder"
+                className="w-full object-cover"
+              />
+            </button>
           </div>
         </section>
 
@@ -362,7 +440,10 @@ export default function BestprofitContainer({
                             className="h-7"
                           />
                         ) : (
-                          <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                          <FontAwesomeIcon
+                            icon={byPrefixAndName.fas.globe}
+                            className="h-5"
+                          />
                         )}
                         <p>
                           {getSocialMediaDisplayValue(item.value || item.url)}
@@ -374,7 +455,10 @@ export default function BestprofitContainer({
               ) : (
                 <div className="rounded-full border border-sky-100/50 bg-white/15 p-4">
                   <div className="mx-auto flex w-fit items-center gap-2">
-                    <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.globe}
+                      className="h-5"
+                    />
                     <p>Belum ada social media</p>
                   </div>
                 </div>
@@ -400,6 +484,45 @@ export default function BestprofitContainer({
           </div>
         </div>
       </div>
+
+      {videoModalOpen && hasVideoSource ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setVideoModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-xl bg-white p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(false)}
+                className="flex cursor-pointer items-center justify-end rounded-full text-sky-700 shadow-[0_10px_24px_rgba(3,105,161,0.3)] transition hover:scale-105"
+                aria-label="Tutup video"
+              >
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas["circle-xmark"]}
+                  className="text-lg"
+                />
+              </button>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-lg bg-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.16)]">
+              <div className="aspect-video w-full bg-black">
+                <iframe
+                  className="block h-full w-full"
+                  src={videoPreviewUrl}
+                  title={`${company?.name || "Bestprofit"} Company Profile`}
+                  allow="autoplay; fullscreen"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

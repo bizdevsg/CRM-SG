@@ -1,10 +1,4 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAddressBook,
-  faCheckCircle,
-  faDownload,
-  faGlobe,
-} from "@fortawesome/free-solid-svg-icons";
 import verifiedBadge from "../../assets/ic_round-verified.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
 import MediaPlaceholder from "../../assets/MediaPlaceholder.png";
@@ -13,6 +7,7 @@ import tiktokIcon from "../../assets/tiktok-icon.png";
 import instagramIcon from "../../assets/instagram-icon.png";
 import linkedinIcon from "../../assets/linkedin-icon.png";
 import safeAlertFill from "../../assets/safe-alert-fill.png";
+import { byPrefixAndName } from "../../utils/fontawesome";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
@@ -179,7 +174,10 @@ export default function SolidGoldContainer({
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-amber-500 px-7 py-2 text-white"
               {...renderLinkTarget(companyVideoUrl)}
             >
-              <FontAwesomeIcon icon={faDownload} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas.download}
+                className="text-2xl"
+              />
               <span className="w-fit text-center text-wrap md:text-lg">
                 Download Company Brochure
               </span>
@@ -190,7 +188,10 @@ export default function SolidGoldContainer({
               download={`${vcardName || "contact"}.vcf`}
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-amber-200 px-5 py-2 text-amber-700"
             >
-              <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas["address-book"]}
+                className="text-2xl"
+              />
               <span className="w-fit text-center text-wrap md:text-lg">
                 Save Contact
               </span>
@@ -223,7 +224,8 @@ export default function SolidGoldContainer({
           <div className="flex items-center justify-between">
             <h5 className="text-2xl font-bold">Legal Integrity</h5>
             <div className="w-fit rounded-full border border-amber-300 bg-amber-100 px-2 py-1 text-amber-800">
-              Verified <FontAwesomeIcon icon={faCheckCircle} />
+              Verified{" "}
+              <FontAwesomeIcon icon={byPrefixAndName.far["circle-check"]} />
             </div>
           </div>
 
@@ -297,7 +299,10 @@ export default function SolidGoldContainer({
                         {socialIcon ? (
                           <img src={socialIcon} alt={`${item.label} Icon`} className="h-5" />
                         ) : (
-                          <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                          <FontAwesomeIcon
+                            icon={byPrefixAndName.fas.globe}
+                            className="h-5"
+                          />
                         )}
                         <p>{getSocialMediaDisplayValue(item.value || item.url)}</p>
                       </div>
@@ -307,7 +312,10 @@ export default function SolidGoldContainer({
               ) : (
                 <div className="rounded-full border border-amber-100/50 bg-white/15 p-4">
                   <div className="mx-auto flex w-fit items-center gap-2">
-                    <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.globe}
+                      className="h-5"
+                    />
                     <p>Belum ada social media</p>
                   </div>
                 </div>

@@ -1,13 +1,5 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAddressBook,
-  faCheckCircle,
-  faCircleXmark,
-  faDownload,
-  faGlobe,
-  faPlay,
-} from "@fortawesome/free-solid-svg-icons";
 import riffanBg from "../../assets/RFB BCG 1.png";
 import verifiedBadge from "../../assets/ic_round-verified.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
@@ -17,6 +9,7 @@ import tiktokIcon from "../../assets/tiktok-icon.png";
 import instagramIcon from "../../assets/instagram-icon.png";
 import linkedinIcon from "../../assets/linkedin-icon.png";
 import safeAlertFill from "../../assets/safe-alert-fill.png";
+import { byPrefixAndName } from "../../utils/fontawesome";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
@@ -252,7 +245,10 @@ export default function RfbContainer({
               title="Download"
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <FontAwesomeIcon icon={faDownload} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas.download}
+                className="text-2xl"
+              />
               <span className="w-fit text-center font-semibold text-wrap">
                 Download Company Profile
               </span>
@@ -263,7 +259,10 @@ export default function RfbContainer({
               download={`${vcardName || "contact"}.vcf`}
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-300 px-5 py-2 text-red-800 cursor-pointer"
             >
-              <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas["address-book"]}
+                className="text-2xl"
+              />
               <span className="w-fit text-cente font-semibold text-wrap">
                 Save Contact
               </span>
@@ -302,7 +301,8 @@ export default function RfbContainer({
           <div className="flex items-center justify-between">
             <h5 className="text-2xl font-bold">Legal Integrity</h5>
             <div className="w-fit rounded-full border border-green-400 bg-green-200 px-2 py-1 font-semibold text-green-800">
-              Verified <FontAwesomeIcon icon={faCheckCircle} />
+              Verified{" "}
+              <FontAwesomeIcon icon={byPrefixAndName.far["circle-check"]} />
             </div>
           </div>
 
@@ -394,7 +394,10 @@ export default function RfbContainer({
               >
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition hover:bg-black/28">
                   <div className="flex items-center gap-3 rounded-full bg-white/50 backdrop-blur-xs p-5 h-15 w-15 text-sm font-semibold text-white shadow-lg border border-white">
-                    <FontAwesomeIcon icon={faPlay} className="text-2xl" />
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.play}
+                      className="text-2xl"
+                    />
                   </div>
                 </div>
                 <img
@@ -439,7 +442,10 @@ export default function RfbContainer({
                             className="h-5"
                           />
                         ) : (
-                          <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                          <FontAwesomeIcon
+                            icon={byPrefixAndName.fas.globe}
+                            className="h-5"
+                          />
                         )}
                         <p>
                           {getSocialMediaDisplayValue(item.value || item.url)}
@@ -451,7 +457,10 @@ export default function RfbContainer({
               ) : (
                 <div className="rounded-full border border-red-200/50 bg-red-100/20 p-4">
                   <div className="mx-auto flex w-fit items-center gap-2 text-white">
-                    <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.globe}
+                      className="h-5"
+                    />
                     <p>Belum ada social media</p>
                   </div>
                 </div>
@@ -494,7 +503,10 @@ export default function RfbContainer({
                 className="flex items-center justify-end rounded-full text-[#dd2c00] shadow-[0_10px_24px_rgba(221,44,0,0.3)] transition hover:scale-105 cursor-pointer"
                 aria-label="Tutup video"
               >
-                <FontAwesomeIcon icon={faCircleXmark} className="text-lg" />
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas["circle-xmark"]}
+                  className="text-lg"
+                />
               </button>
             </div>
 

@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faBuilding,
-  faGlobe,
-  faScaleBalanced,
-  faUser,
-} from "@fortawesome/free-solid-svg-icons";
 import BestprofitContainer from "../components/organisms/BestprofitContainer";
 import EquityworldContainer from "../components/organisms/EquityworldContainer";
 import KpfContainer from "../components/organisms/KpfContainer";
@@ -14,6 +7,7 @@ import RfbContainer from "../components/organisms/RfbContainer";
 import SolidGoldContainer from "../components/organisms/SolidGoldContainer";
 import LoadingScreen from "../components/atoms/LoadingScreen";
 import { apiFetch } from "../services/api";
+import { byPrefixAndName } from "../utils/fontawesome";
 import riffanLogo from "../assets/logo-rfb-full.png";
 import commodityIcon from "../assets/commodity-icon.png";
 import OilIcon from "../assets/oil-icon.png";
@@ -122,10 +116,14 @@ function getCompanyBrand(company) {
 }
 
 const SECTION_NAV_ITEMS = [
-  { id: "profile", label: "Profile", icon: faUser },
-  { id: "legality", label: "Legality", icon: faScaleBalanced },
-  { id: "corporate", label: "Corporate", icon: faBuilding },
-  { id: "social-media", label: "Social Media", icon: faGlobe },
+  { id: "profile", label: "Profile", icon: byPrefixAndName.fas.user },
+  {
+    id: "legality",
+    label: "Legality",
+    icon: byPrefixAndName.fas["scale-balanced"],
+  },
+  { id: "corporate", label: "Corporate", icon: byPrefixAndName.fas.building },
+  { id: "social-media", label: "Social Media", icon: byPrefixAndName.fas.globe },
 ];
 
 function getCompanyContainer(companyKey) {

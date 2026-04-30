@@ -1,10 +1,4 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAddressBook,
-  faCheckCircle,
-  faDownload,
-  faGlobe,
-} from "@fortawesome/free-solid-svg-icons";
 import verifiedBadge from "../../assets/ic_round-verified.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
 import MediaPlaceholder from "../../assets/MediaPlaceholder.png";
@@ -13,6 +7,7 @@ import tiktokIcon from "../../assets/tiktok-icon.png";
 import instagramIcon from "../../assets/instagram-icon.png";
 import linkedinIcon from "../../assets/linkedin-icon.png";
 import safeAlertFill from "../../assets/safe-alert-fill.png";
+import { byPrefixAndName } from "../../utils/fontawesome";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
@@ -223,7 +218,10 @@ export default function CompanyEcardContainer({
               className={`inline-flex w-full items-center justify-center gap-3 rounded-xl px-7 py-2 ${resolvedTheme.primaryButtonClass}`}
               {...renderLinkTarget(companyVideoUrl)}
             >
-              <FontAwesomeIcon icon={faDownload} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas.download}
+                className="text-2xl"
+              />
               <span className="w-fit text-center text-wrap md:text-lg">
                 Download Company Brochure
               </span>
@@ -234,7 +232,10 @@ export default function CompanyEcardContainer({
               download={`${vcardName || "contact"}.vcf`}
               className={`inline-flex w-full items-center justify-center gap-3 rounded-xl border px-5 py-2 ${resolvedTheme.secondaryButtonClass}`}
             >
-              <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas["address-book"]}
+                className="text-2xl"
+              />
               <span className="w-fit text-center text-wrap md:text-lg">
                 Save Contact
               </span>
@@ -275,7 +276,8 @@ export default function CompanyEcardContainer({
             <div
               className={`w-fit rounded-full border px-2 py-1 ${resolvedTheme.verifiedPillClass}`}
             >
-              Verified <FontAwesomeIcon icon={faCheckCircle} />
+              Verified{" "}
+              <FontAwesomeIcon icon={byPrefixAndName.far["circle-check"]} />
             </div>
           </div>
 
@@ -387,7 +389,10 @@ export default function CompanyEcardContainer({
                             className="h-5"
                           />
                         ) : (
-                          <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                          <FontAwesomeIcon
+                            icon={byPrefixAndName.fas.globe}
+                            className="h-5"
+                          />
                         )}
                         <p>
                           {getSocialMediaDisplayValue(item.value || item.url)}
@@ -401,7 +406,10 @@ export default function CompanyEcardContainer({
                   className={`rounded-full border p-4 ${resolvedTheme.socialItemClass}`}
                 >
                   <div className="mx-auto flex w-fit items-center gap-2">
-                    <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.globe}
+                      className="h-5"
+                    />
                     <p>Belum ada social media</p>
                   </div>
                 </div>

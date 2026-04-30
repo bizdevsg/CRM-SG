@@ -1,25 +1,24 @@
+import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAddressBook,
-  faCheckCircle,
-  faDownload,
-  faGlobe,
-} from "@fortawesome/free-solid-svg-icons";
 import verifiedBadge from "../../assets/ic_round-verified.png";
-import googleMapIcon from "../../assets/google-map-icon.png";
-import MediaPlaceholder from "../../assets/MediaPlaceholder.png";
+import MediaPlaceholder from "../../assets/MediaPlaceholderKPF.png";
 import worldStar from "../../assets/world-star.png";
 import tiktokIcon from "../../assets/tiktok-icon.png";
 import instagramIcon from "../../assets/instagram-icon.png";
 import linkedinIcon from "../../assets/linkedin-icon.png";
 import safeAlertFill from "../../assets/safe-alert-fill.png";
 import LogoKPF from "../../assets/logo-kpf.png";
+import iconBuilding from "../../assets/icon-building.png";
+import { byPrefixAndName } from "../../utils/fontawesome";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   linkedin: linkedinIcon,
 };
+
+const KPF_COMPANY_PROFILE_URL =
+  "https://www.youtube.com/embed/QYPPIo2xgJ8?si=hSBci4Y10ltstEyf";
 
 function getInitials(name) {
   return String(name || "")
@@ -66,6 +65,43 @@ function getSocialMediaDisplayValue(value) {
     .replace(/\/+$/g, "");
 }
 
+function getKpfVideoEmbedUrl(url) {
+  const value = String(url || "").trim();
+
+  if (!value) {
+    return KPF_COMPANY_PROFILE_URL;
+  }
+
+  try {
+    const parsedUrl = new URL(value);
+    const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+
+    if (hostname === "youtube.com" || hostname === "m.youtube.com") {
+      if (parsedUrl.pathname.startsWith("/embed/")) {
+        return value;
+      }
+
+      if (parsedUrl.pathname === "/watch") {
+        const videoId = parsedUrl.searchParams.get("v");
+        return videoId
+          ? `https://www.youtube.com/embed/${videoId}`
+          : KPF_COMPANY_PROFILE_URL;
+      }
+    }
+
+    if (hostname === "youtu.be") {
+      const videoId = parsedUrl.pathname.split("/").filter(Boolean)[0];
+      return videoId
+        ? `https://www.youtube.com/embed/${videoId}`
+        : KPF_COMPANY_PROFILE_URL;
+    }
+  } catch {
+    return KPF_COMPANY_PROFILE_URL;
+  }
+
+  return KPF_COMPANY_PROFILE_URL;
+}
+
 export default function KpfContainer({
   activeSection,
   sectionNavItems,
@@ -85,6 +121,10 @@ export default function KpfContainer({
   corporateStats,
   socialMediaItems,
 }) {
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const videoPreviewUrl = getKpfVideoEmbedUrl(companyVideoUrl);
+  const hasVideoSource = Boolean(videoPreviewUrl);
+
   return (
     <div
       data-company-theme="kontak-perkasa"
@@ -158,12 +198,12 @@ export default function KpfContainer({
                 <img src={verifiedBadge} alt="Logo Verified" className="h-4" />
                 <p className="uppercase font-bold text-white">Verified</p>
               </div>
-              <h1 className="text-2xl font-bold drop-shadow-lg md:text-3xl">
+              <h1 className="text-2xl font-bold drop-shadow-lg md:text-2xl">
                 {profile?.name || "Nama Profil"}
               </h1>
               <div className="">
                 <p className="md:text-lg">{headline}</p>
-                <p className="text-2xl font-bold">
+                <p className="text-xl font-bold">
                   {profile?.licenseNumber || "Nomor Izin"}
                 </p>
               </div>
@@ -180,7 +220,10 @@ export default function KpfContainer({
               {...renderLinkTarget(companyVideoUrl)}
             >
               <div className="p-2 aspect-square rounded-full bg-emerald-100 flex items-center justify-center">
-                <FontAwesomeIcon icon={faDownload} className="text-2xl" />
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas.download}
+                  className="text-2xl"
+                />
               </div>
               <p className="w-fit text-center text-wrap font-semibold md:text-lg">
                 Download Company Brochure
@@ -193,7 +236,10 @@ export default function KpfContainer({
               className="inline-flex flex-col w-full items-center justify-center gap-1 rounded-xl bg-emerald-700 px-7 py-2 text-white"
             >
               <div className="p-2 aspect-square rounded-full bg-emerald-600/50 flex items-center justify-center">
-                <FontAwesomeIcon icon={faAddressBook} className="text-2xl" />
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas["address-book"]}
+                  className="text-2xl"
+                />
               </div>
               <p className="w-fit text-center text-wrap font-semibold md:text-lg">
                 Save Contact
@@ -201,7 +247,42 @@ export default function KpfContainer({
             </a>
           </div>
 
-          <div className="mt-5 space-y-2">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="border border-zinc-300 text-center rounded-2xl p-4">
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas.award}
+                className="text-2xl text-[#705D00]"
+              />
+              <div className="mt-1">
+                <h6 className="font-bold text-lg text-emerald-800">12+</h6>
+                <p className="text-sm">Years Experience</p>
+              </div>
+            </div>
+            <div className="border border-zinc-300 text-center rounded-2xl p-4">
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas["people-line"]}
+                className="text-2xl text-[#705D00]"
+              />
+              <div className="mt-1">
+                <h6 className="font-bold text-lg text-emerald-800">1000+</h6>
+                <p className="text-sm">Clients</p>
+              </div>
+            </div>
+            <div className="border border-zinc-300 text-center rounded-2xl p-4">
+              <FontAwesomeIcon
+                icon={byPrefixAndName.fas.shield}
+                className="text-2xl text-[#705D00]"
+              />
+              <div className="mt-1">
+                <h6 className="font-bold text-lg text-emerald-800">
+                  Regulator
+                </h6>
+                <p className="text-sm">Bappebti</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-7 space-y-2">
             <div className="flex items-center gap-2">
               <div className="w-10 border-2 rounded-full border-emerald-800" />
               <h6 className="uppercase text-emerald-800 font-semibold text-xl">
@@ -216,7 +297,7 @@ export default function KpfContainer({
             </p>
           </div>
 
-          <div className="mt-7 grid grid-cols-4 gap-2">
+          {/* <div className="mt-7 grid grid-cols-4 gap-2">
             {infoItems.map((item) => (
               <div
                 key={item.id}
@@ -230,7 +311,7 @@ export default function KpfContainer({
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
         </section>
 
         <section
@@ -245,7 +326,7 @@ export default function KpfContainer({
             </h6>
           </div>
 
-          <p className="text-4xl font-semibold text-center">
+          <p className="text-2xl font-semibold text-center">
             Licensed financial stewardship you can rely on.
           </p>
 
@@ -272,19 +353,24 @@ export default function KpfContainer({
             </h6>
           </div>
 
-          <p className="text-4xl font-semibold text-center">
+          <p className="text-3xl font-semibold text-center">
             Financial Stewardship You Can Trust
           </p>
 
-          <div className="bg-zinc-800 text-white p-7 rounded-4xl space-y-3">
+          <div className="relative bg-zinc-800 text-white p-7 rounded-4xl space-y-3">
+            <img
+              src={iconBuilding}
+              alt="Company Logo"
+              className="mx-auto w-50 absolute top-0 right-0"
+            />
             <p className="font-bold text-xl">PT Kontakperkasa Futures</p>
-            <p className="text-xl">
+            <p className="text-lg">
               PT Kontakperkasa Futures, pialang berjangka resmi sejak 2000 yang
               diawasi BAPPEBTI, OJK, dan Bank Indonesia, hadir dengan layanan
               trading aman, profesional, dan terpercaya untuk memaksimalkan
               peluang investasi Anda.
             </p>
-            <div className="flex gap-3 items-center">
+            <div className="mt-7 flex gap-3 items-center">
               <div>
                 <h6 className="text-yellow-500 text-2xl font-semibold">#1</h6>
                 <p className="text-lg text-zinc-300 uppercase">Top Broker</p>
@@ -299,51 +385,49 @@ export default function KpfContainer({
             </div>
           </div>
 
+          <div className="flex w-full items-center justify-center gap-3">
+            <div className="p-2 border-2 border-zinc-300 rounded-xl">
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas["shield-alt"]}
+                  className="text-2xl text-[#705D00]"
+                />
+                <span>JFX Member</span>
+              </div>
+            </div>
+            <div className="p-2 border-2 border-zinc-300 rounded-xl">
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.far["circle-check"]}
+                  className="text-2xl text-[#705D00]"
+                />
+                <span>KBI Member</span>
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-8">
-            <div className="space-y-2">
-              <h6 className="text-xl font-bold text-emerald-800">
-                {company?.name || "Profil Perusahaan"}
-              </h6>
-              <p className="text-justify md:text-lg">
-                {company?.description ||
-                  "Isi desain dan copy Kontak Perkasa Futures nanti kamu bisa bedakan di sini."}
-              </p>
-            </div>
-
-            <div className="flex items-start gap-1">
-              <img src={googleMapIcon} alt="Google Map" className="h-fit" />
-              <p className="text-sm md:text-base">
-                {branch?.address || "Alamat cabang belum tersedia."}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-0.5 overflow-hidden rounded-3xl text-center shadow">
-              {corporateStats.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col items-center justify-center bg-white p-4"
-                >
-                  <h5 className="break-words text-2xl font-bold text-emerald-800 md:text-3xl">
-                    {item.value}
-                  </h5>
-                  <p className="font-semibold text-zinc-400 md:text-xl">
-                    {item.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
             <div className="overflow-hidden rounded-3xl">
-              {companyVideoUrl ? (
-                <a
-                  href={companyVideoUrl}
-                  {...renderLinkTarget(companyVideoUrl)}
-                >
-                  <img src={MediaPlaceholder} alt="Media Placeholder" />
-                </a>
-              ) : (
-                <img src={MediaPlaceholder} alt="Media Placeholder" />
-              )}
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(true)}
+                disabled={!hasVideoSource}
+                className="relative block aspect-video w-full overflow-hidden rounded-3xl cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 transition hover:bg-black/28">
+                  <div className="flex h-15 w-15 items-center justify-center rounded-full border border-white bg-white/50 p-5 text-sm font-semibold text-white shadow-lg backdrop-blur-xs">
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.play}
+                      className="text-2xl"
+                    />
+                  </div>
+                </div>
+                <img
+                  src={MediaPlaceholder}
+                  alt="Media Placeholder"
+                  className="w-full object-cover"
+                />
+              </button>
             </div>
           </div>
         </section>
@@ -380,7 +464,10 @@ export default function KpfContainer({
                             className="h-5"
                           />
                         ) : (
-                          <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                          <FontAwesomeIcon
+                            icon={byPrefixAndName.fas.globe}
+                            className="h-5"
+                          />
                         )}
                         <p>
                           {getSocialMediaDisplayValue(item.value || item.url)}
@@ -392,7 +479,10 @@ export default function KpfContainer({
               ) : (
                 <div className="rounded-full border border-emerald-100/50 bg-white/15 p-4">
                   <div className="mx-auto flex w-fit items-center gap-2">
-                    <FontAwesomeIcon icon={faGlobe} className="h-5" />
+                    <FontAwesomeIcon
+                      icon={byPrefixAndName.fas.globe}
+                      className="h-5"
+                    />
                     <p>Belum ada social media</p>
                   </div>
                 </div>
@@ -418,6 +508,45 @@ export default function KpfContainer({
           </div>
         </div>
       </div>
+
+      {videoModalOpen && hasVideoSource ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setVideoModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-xl bg-white p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setVideoModalOpen(false)}
+                className="flex cursor-pointer items-center justify-end rounded-full text-emerald-700 shadow-[0_10px_24px_rgba(4,120,87,0.3)] transition hover:scale-105"
+                aria-label="Tutup video"
+              >
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas["circle-xmark"]}
+                  className="text-lg"
+                />
+              </button>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-lg bg-slate-950 shadow-[0_18px_40px_rgba(15,23,42,0.16)]">
+              <div className="aspect-video w-full bg-black">
+                <iframe
+                  className="block h-full w-full"
+                  src={videoPreviewUrl}
+                  title={`${company?.name || "KPF"} Company Profile`}
+                  allow="autoplay; fullscreen"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
