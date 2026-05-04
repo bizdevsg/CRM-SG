@@ -18,6 +18,7 @@ import EcardsPage from "./pages/dashboard/marketing/EcardsPage";
 import EcardCreatePage from "./pages/dashboard/marketing/EcardCreatePage";
 import EcardEditPage from "./pages/dashboard/marketing/EcardEditPage";
 import ProfilePage from "./pages/dashboard/marketing/ProfilePage";
+import ProfileEditPage from "./pages/dashboard/marketing/ProfileEditPage";
 import BranchesPage from "./pages/dashboard/superadmin/BranchesPage";
 import MarketingPage from "./pages/dashboard/superadmin/MarketingPage";
 import MarketingCreatePage from "./pages/dashboard/superadmin/MarketingCreatePage";
@@ -167,6 +168,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["marketing"]}>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="profile/edit"
+          element={
+            <ProtectedRoute allowedRoles={["marketing"]}>
+              <ProfileEditPage />
             </ProtectedRoute>
           }
         />

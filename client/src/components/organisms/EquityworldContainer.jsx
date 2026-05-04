@@ -4,16 +4,26 @@ import verifiedBadge from "../../assets/Icon-verif.png";
 import googleMapIcon from "../../assets/google-map-icon.png";
 import MediaPlaceholder from "../../assets/MediaPlaceholderEWF.png";
 import worldStar from "../../assets/world-star.png";
-import tiktokIcon from "../../assets/tiktok-icon.png";
-import instagramIcon from "../../assets/instagram-icon.png";
-import linkedinIcon from "../../assets/linkedin-icon.png";
+import tiktokIcon from "../../assets/tiktokLogo.png";
+import instagramIcon from "../../assets/instagram icon vector_8704817.png";
+import linkedinIcon from "../../assets/linkedinLogo.png";
+import xLogo from "../../assets/xLogo.png";
 import { byPrefixAndName } from "../../utils/fontawesome";
 import logoEWF from "../../assets/logoEWF.png";
+import shield1 from "../../assets/shield1.png";
+import shield2 from "../../assets/shield2.png";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   linkedin: linkedinIcon,
+};
+
+const SOCIAL_MEDIA_NAME_BY_ID = {
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  twitter: "Twitter/X",
 };
 
 const EQUITYWORLD_COMPANY_PROFILE_URL =
@@ -156,6 +166,10 @@ export default function EquityworldContainer({
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const videoPreviewUrl = getEquityworldVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
+  const activeSectionIndex = Math.max(
+    sectionNavItems.findIndex((item) => item.id === activeSection),
+    0,
+  );
 
   return (
     <div
@@ -163,8 +177,18 @@ export default function EquityworldContainer({
       className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-slate-50"
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
-        <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
-          <div className="grid grid-cols-4 gap-2">
+        <div className="border border-white bg-white p-3 pt-0 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
+          <div className="relative grid grid-cols-4 gap-2 pt-3">
+            <div
+              className="pointer-events-none absolute left-0 top-0 z-0 rounded-full bg-orange-500 transition-transform duration-300 ease-out"
+              style={{
+                height: "2px",
+                width: "calc(25% - 0.375rem)",
+                transform: `translateX(calc(${activeSectionIndex * 100}% + ${
+                  activeSectionIndex * 0.5
+                }rem))`,
+              }}
+            />
             {sectionNavItems.map((item) => {
               const isActive = activeSection === item.id;
 
@@ -174,17 +198,19 @@ export default function EquityworldContainer({
                   type="button"
                   onClick={() => onSectionNavigate(item.id)}
                   aria-current={isActive ? "true" : "false"}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-all duration-200 ${
+                  className={`relative z-10 flex cursor-pointer flex-col items-center justify-center px-2 py-3 text-center transition-colors duration-300 ${
                     isActive
-                      ? "bg-orange-700 text-white shadow-[0_14px_28px_rgba(67,56,202,0.28)]"
-                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                      ? "text-orange-500"
+                      : "text-zinc-400 hover:text-zinc-700"
                   }`}
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
-                    className={`text-[1.35rem] ${isActive ? "text-white" : "text-zinc-400"}`}
+                    className={`text-[1.35rem] transition-colors duration-300 ${
+                      isActive ? "text-orange-500" : "text-zinc-400"
+                    }`}
                   />
-                  <span className="mt-2 text-sm font-bold leading-tight sm:text-[15px]">
+                  <span className="mt-2 text-xs font-bold leading-tight transition-colors duration-300 sm:text-[15px]">
                     {item.label}
                   </span>
                 </button>
@@ -214,7 +240,7 @@ export default function EquityworldContainer({
             <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center md:justify-end">
               {profile?.photo ? (
                 <img
-                  className="h-full max-h-[520px] w-auto object-contain object-bottom"
+                  className="h-full max-h-[520px] w-full object-cover object-top"
                   src={profile.photo}
                   alt={profile?.name || "Foto profil"}
                 />
@@ -225,7 +251,7 @@ export default function EquityworldContainer({
               )}
             </div>
 
-            <div className="absolute w-full bottom-5 z-40 bg-white/80 p-4 mx-0.5">
+            <div className="absolute w-full bottom-5 z-40 bg-white/80 p-4">
               <div className="flex items-center justify-center gap-2">
                 <h1 className="text-2xl font-bold text-black drop-shadow-lg">
                   {profile?.name || "Nama Profil"}
@@ -311,7 +337,7 @@ export default function EquityworldContainer({
           </div>
 
           <div className="mt-5">
-            <h5 className="text-2xl font-bold">About Me</h5>
+            <h5 className="text-2xl font-semibold">About Me</h5>
             <div className="p-5 bg-white mt-5 rounded-2xl shadow-lg">
               <p className="text-justify md:text-lg">
                 {profile?.description || "Tidak ada deskripsi profil."}
@@ -335,7 +361,7 @@ export default function EquityworldContainer({
           </div>
 
           <div className="mt-8">
-            <h5 className="text-2xl font-bold">Why Choose Me?</h5>
+            <h5 className="text-2xl font-semibold">Why Choose Me?</h5>
 
             <div className="space-y-5 mt-7">
               {WhyChooseMe.map((item) => (
@@ -366,7 +392,7 @@ export default function EquityworldContainer({
           className="space-y-4 p-4"
         >
           <div className="flex items-center justify-between">
-            <h5 className="text-2xl font-bold">Certificate</h5>
+            <h5 className="text-2xl font-semibold">Certificate</h5>
           </div>
 
           <div className="mt-7">
@@ -386,7 +412,7 @@ export default function EquityworldContainer({
           className="scroll-mt-28 space-y-4 p-4"
         >
           <div className="flex items-center justify-between">
-            <h5 className="text-2xl font-bold">Corporate Heritage</h5>
+            <h5 className="text-2xl font-semibold">Corporate Heritage</h5>
           </div>
 
           <div className="space-y-8">
@@ -397,7 +423,7 @@ export default function EquityworldContainer({
                   {company?.name || "Profil Perusahaan"}
                 </h6>
 
-                <p className="max-w-[16ch] text-[1.05rem] leading-[1.4] font-normal text-white/95 sm:max-w-none sm:text-[1.2rem]">
+                <p className="text-lg leading-[1.4] font-normal text-white/95 sm:max-w-none sm:text-[1.2rem]">
                   PT Equityworld Futures (EWF), pialang berjangka resmi sejak
                   2005 yang diawasi BAPPEBTI, OJK, dan BI, hadir sebagai mitra
                   investasi terpercaya dengan layanan aman, profesional, dan
@@ -428,6 +454,54 @@ export default function EquityworldContainer({
                 />
               </button>
             </div>
+
+            <div>
+              <div>
+                <h1 className="text-2xl font-semibold">Verification Hub</h1>
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <div className="bg-white flex items-center justify-between p-4 rounded-2xl border border-orange-100">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-3 rounded-xl">
+                      <img src={shield1} alt="Shield 1" className="w-10 h-10" />
+                    </div>
+
+                    <div>
+                      <h6 className="font-semibold">Bappebti Verified</h6>
+                      <p className="text-zinc-400 text-md">
+                        850/BAPPEBTI/SI/12/2005
+                      </p>
+                    </div>
+                  </div>
+
+                  <FontAwesomeIcon
+                    icon={byPrefixAndName.fas["circle-check"]}
+                    className="text-2xl text-orange-500"
+                  />
+                </div>
+
+                <div className="bg-white flex items-center justify-between p-4 rounded-2xl border border-orange-100">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-orange-100 p-4 rounded-xl">
+                      <img src={shield2} alt="Shield 2" className="w-10 h-10" />
+                    </div>
+
+                    <div>
+                      <h6 className="font-semibold">
+                        Indonesian Clearing House Member
+                      </h6>
+                      <p className="text-zinc-400 text-md">36/AK-KBI/IV/2006</p>
+                    </div>
+                  </div>
+
+                  <FontAwesomeIcon
+                    icon={byPrefixAndName.fas["circle-check"]}
+                    className="text-2xl text-orange-500"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -438,38 +512,37 @@ export default function EquityworldContainer({
         >
           <div className="rounded-3xl">
             <div className="flex w-fit items-center gap-2">
-              <h5 className="text-2xl font-bold">Let's Connect</h5>
+              <h5 className="text-2xl font-semibold">Let's Connect</h5>
             </div>
 
-            <div className="mt-7 grid grid-cols-3 items-center">
+            <div className="mt-7 grid grid-cols-2 gap-2 items-center">
               {socialMediaItems.length ? (
                 socialMediaItems.map((item) => {
                   const socialIcon = SOCIAL_MEDIA_IMAGE_BY_ID[item.id];
+                  const socialName = SOCIAL_MEDIA_NAME_BY_ID[item.id];
                   const socialUrl = normalizePublicLink(item.url);
 
                   return (
                     <a
                       key={item.id}
                       href={socialUrl}
-                      className="block rounded-full border border-orange-50 bg-white px-4 py-1"
+                      className="block rounded-full border border-orange-100 bg-white px-4 py-2"
                       {...renderLinkTarget(socialUrl)}
                     >
                       <div className="mx-auto flex w-fit items-center gap-2">
                         {socialIcon ? (
-                          <div className="bg-black">
-                            <img
-                              src={socialIcon}
-                              alt={`${item.label} Icon`}
-                              className="h-5"
-                            />
-                          </div>
+                          <img
+                            src={socialIcon}
+                            alt={`${item.label} Icon`}
+                            className="h-5"
+                          />
                         ) : (
                           <FontAwesomeIcon
                             icon={byPrefixAndName.fas.globe}
                             className="h-5"
                           />
                         )}
-                        <p>{item.label}</p>
+                        <p>{socialName}</p>
                       </div>
                     </a>
                   );

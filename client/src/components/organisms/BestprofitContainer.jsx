@@ -18,6 +18,13 @@ const SOCIAL_MEDIA_IMAGE_BY_ID = {
   linkedin: linkedinIcon,
 };
 
+const SOCIAL_MEDIA_NAME_BY_ID = {
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  twitter: "Twitter/X",
+};
+
 const BESTPROFIT_COMPANY_PROFILE_URL =
   "https://www.youtube.com/embed/H0o0szp8_rE?si=lpVgqHmyNeedN5sc";
 
@@ -126,6 +133,10 @@ export default function BestprofitContainer({
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const videoPreviewUrl = getBestprofitVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
+  const activeSectionIndex = Math.max(
+    sectionNavItems.findIndex((item) => item.id === activeSection),
+    0,
+  );
 
   return (
     <div
@@ -134,7 +145,16 @@ export default function BestprofitContainer({
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
         <div className="border border-white bg-white px-3 pb-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="relative grid grid-cols-4 gap-2 pt-3">
+            <div
+              className="pointer-events-none absolute left-0 top-0 z-0 h-1 rounded-full bg-sky-700 transition-transform duration-300 ease-out"
+              style={{
+                width: "calc(25% - 0.375rem)",
+                transform: `translateX(calc(${activeSectionIndex * 100}% + ${
+                  activeSectionIndex * 0.5
+                }rem))`,
+              }}
+            />
             {sectionNavItems.map((item) => {
               const isActive = activeSection === item.id;
 
@@ -144,17 +164,19 @@ export default function BestprofitContainer({
                   type="button"
                   onClick={() => onSectionNavigate(item.id)}
                   aria-current={isActive ? "true" : "false"}
-                  className={`flex cursor-pointer flex-col items-center justify-center px-2 py-3 text-center transition-all duration-200 ${
+                  className={`relative z-10 flex cursor-pointer flex-col items-center justify-center px-2 py-3 text-center transition-colors duration-300 ${
                     isActive
-                      ? "border-t-4 border-sky-700"
-                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 hover:border-t-4 hover:border-sky-700"
+                      ? "text-sky-700"
+                      : "text-zinc-400 hover:text-zinc-700"
                   }`}
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
-                    className={`text-[1.35rem] ${isActive ? "text-sky-700" : "text-zinc-400"}`}
+                    className={`text-[1.35rem] transition-colors duration-300 ${
+                      isActive ? "text-sky-700" : "text-zinc-400"
+                    }`}
                   />
-                  <span className="mt-2 text-sm font-bold leading-tight sm:text-[15px]">
+                  <span className="mt-2 text-xs font-bold leading-tight transition-colors duration-300 sm:text-[15px]">
                     {item.label}
                   </span>
                 </button>
@@ -184,7 +206,7 @@ export default function BestprofitContainer({
             <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center md:justify-end">
               {profile?.photo ? (
                 <img
-                  className="h-full max-h-[520px] w-auto object-contain object-bottom"
+                  className="h-full max-h-[520px] w-full object-cover object-bottom"
                   src={profile.photo}
                   alt={profile?.name || "Foto profil"}
                 />

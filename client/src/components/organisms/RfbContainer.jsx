@@ -9,6 +9,7 @@ import tiktokIcon from "../../assets/tiktok-icon.png";
 import instagramIcon from "../../assets/instagram-icon.png";
 import linkedinIcon from "../../assets/linkedin-icon.png";
 import safeAlertFill from "../../assets/safe-alert-fill.png";
+import rfbCompanyProfilePdf from "../../assets/brosur-pt/CP-RFB-Mei2026.pdf";
 import { byPrefixAndName } from "../../utils/fontawesome";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
@@ -133,7 +134,7 @@ export default function RfbContainer({
   return (
     <div
       data-company-theme="riffan"
-      className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-zinc-50"
+      className="relative mx-auto min-h-screen max-w-md overflow-x-hidden bg-zinc-50 font-sans"
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
         <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
@@ -157,7 +158,9 @@ export default function RfbContainer({
                   onClick={() => onSectionNavigate(item.id)}
                   aria-current={isActive ? "true" : "false"}
                   className={`relative z-10 flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-colors duration-300 ${
-                    isActive ? "text-white" : "text-zinc-400 hover:text-zinc-700"
+                    isActive
+                      ? "text-white"
+                      : "text-zinc-400 hover:text-zinc-700"
                   }`}
                 >
                   <FontAwesomeIcon
@@ -205,7 +208,7 @@ export default function RfbContainer({
             <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center md:justify-end">
               {profile?.photo ? (
                 <img
-                  className="h-full max-h-[520px] w-auto object-contain object-bottom"
+                  className="h-full max-h-[520px] w-full object-cover object-top"
                   src={profile.photo}
                   alt={profile?.name || "Foto profil"}
                 />
@@ -239,11 +242,11 @@ export default function RfbContainer({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              disabled
+            <a
+              href={rfbCompanyProfilePdf}
+              download="CP-RFB-Mei2026.pdf"
               title="Download"
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-7 py-2 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-800 px-7 py-2 text-white cursor-pointer"
             >
               <FontAwesomeIcon
                 icon={byPrefixAndName.fas.download}
@@ -252,7 +255,7 @@ export default function RfbContainer({
               <span className="w-fit text-center font-semibold text-wrap">
                 Download Company Profile
               </span>
-            </button>
+            </a>
 
             <a
               href={vcardHref}

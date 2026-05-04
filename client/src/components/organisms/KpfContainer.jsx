@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import verifiedBadge from "../../assets/ic_round-verified.png";
+import verifiedBadge from "../../assets/ic_baseline-verified-fill.png";
 import MediaPlaceholder from "../../assets/MediaPlaceholderKPF.png";
 import worldStar from "../../assets/world-star.png";
-import tiktokIcon from "../../assets/tiktok-icon.png";
-import instagramIcon from "../../assets/instagram-icon.png";
-import linkedinIcon from "../../assets/linkedin-icon.png";
-import safeAlertFill from "../../assets/safe-alert-fill.png";
+import tiktokIcon from "../../assets/tiktokLogo.png";
+import instagramIcon from "../../assets/instagram icon vector_8704817.png";
+import linkedinIcon from "../../assets/linkedinLogo.png";
+import xLogo from "../../assets/xLogo.png";
+import safeAlertFill from "../../assets/shieldKpf.png";
 import LogoKPF from "../../assets/logo-kpf.png";
 import iconBuilding from "../../assets/icon-building.png";
 import { byPrefixAndName } from "../../utils/fontawesome";
@@ -15,6 +16,14 @@ const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
   instagram: instagramIcon,
   linkedin: linkedinIcon,
+  twitter: xLogo,
+};
+
+const SOCIAL_MEDIA_NAME_BY_ID = {
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  linkedin: "LinkedIn",
+  twitter: "Twitter/X",
 };
 
 const KPF_COMPANY_PROFILE_URL =
@@ -124,6 +133,10 @@ export default function KpfContainer({
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const videoPreviewUrl = getKpfVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
+  const activeSectionIndex = Math.max(
+    sectionNavItems.findIndex((item) => item.id === activeSection),
+    0,
+  );
 
   return (
     <div
@@ -132,7 +145,16 @@ export default function KpfContainer({
     >
       <div className="fixed bottom-0 z-50 w-full max-w-md">
         <div className="rounded-t-3xl border border-white bg-white p-3 shadow-[0_-10px_15px_rgba(0,0,0,0.25)] backdrop-blur">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="relative grid grid-cols-4 gap-2">
+            <div
+              className="pointer-events-none absolute bottom-0 top-0 z-0 rounded-2xl bg-emerald-700 shadow-[0_14px_28px_rgba(4,120,87,0.28)] transition-transform duration-300 ease-out"
+              style={{
+                width: "calc(25% - 0.375rem)",
+                transform: `translateX(calc(${activeSectionIndex * 100}% + ${
+                  activeSectionIndex * 0.5
+                }rem))`,
+              }}
+            />
             {sectionNavItems.map((item) => {
               const isActive = activeSection === item.id;
 
@@ -142,17 +164,19 @@ export default function KpfContainer({
                   type="button"
                   onClick={() => onSectionNavigate(item.id)}
                   aria-current={isActive ? "true" : "false"}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-all duration-200 ${
+                  className={`relative z-10 flex cursor-pointer flex-col items-center justify-center rounded-2xl px-2 py-3 text-center transition-colors duration-300 ${
                     isActive
-                      ? "bg-emerald-700 text-white shadow-[0_14px_28px_rgba(4,120,87,0.28)]"
-                      : "text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                      ? "text-white"
+                      : "text-zinc-400 hover:text-zinc-700"
                   }`}
                 >
                   <FontAwesomeIcon
                     icon={item.icon}
-                    className={`text-[1.35rem] ${isActive ? "text-white" : "text-zinc-400"}`}
+                    className={`text-[1.35rem] transition-colors duration-300 ${
+                      isActive ? "text-white" : "text-zinc-400"
+                    }`}
                   />
-                  <span className="mt-2 text-sm font-bold leading-tight sm:text-[15px]">
+                  <span className="mt-2 text-sm font-bold leading-tight transition-colors duration-300 sm:text-[15px]">
                     {item.label}
                   </span>
                 </button>
@@ -179,13 +203,15 @@ export default function KpfContainer({
           ) : null}
 
           <div className="relative min-h-[520px] overflow-hidden rounded-xl bg-zinc-400">
-            <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center md:justify-end">
+            <div className="absolute inset-x-0 bottom-0 top-0 flex items-end justify-center">
               {profile?.photo ? (
-                <img
-                  className="h-full max-h-[520px] w-auto object-contain object-bottom"
-                  src={profile.photo}
-                  alt={profile?.name || "Foto profil"}
-                />
+                <div className="h-full max-h-[520px] w-full overflow-hidden">
+                  <img
+                    className="h-full w-full object-cover object-top"
+                    src={profile.photo}
+                    alt={profile?.name || "Foto profil"}
+                  />
+                </div>
               ) : (
                 <div className="mb-10 mr-8 flex h-40 w-40 items-center justify-center rounded-full bg-white/80 text-5xl font-black text-slate-700 shadow-lg">
                   {getInitials(profile?.name) || "EC"}
@@ -194,13 +220,12 @@ export default function KpfContainer({
             </div>
 
             <div className="absolute bottom-0 z-50 w-full pb-10 bg-linear-0 from-emerald-900/70 via-emerald-900/50 to-transparent p-4 pt-10 text-white">
-              <div className="flex items-center gap-1 bg-sky-500 rounded-full w-fit px-2 py-0.5">
-                <img src={verifiedBadge} alt="Logo Verified" className="h-4" />
-                <p className="uppercase font-bold text-white">Verified</p>
+              <div className="flex items-center gap-2">
+                <img src={verifiedBadge} alt="Logo Verified" className="h-7" />
+                <h1 className="text-2xl font-bold drop-shadow-lg md:text-2xl">
+                  {profile?.name || "Nama Profil"}
+                </h1>
               </div>
-              <h1 className="text-2xl font-bold drop-shadow-lg md:text-2xl">
-                {profile?.name || "Nama Profil"}
-              </h1>
               <div className="">
                 <p className="md:text-lg">{headline}</p>
                 <p className="text-xl font-bold">
@@ -437,23 +462,23 @@ export default function KpfContainer({
           ref={registerSection("social-media")}
           className="scroll-mt-28 p-4"
         >
-          <div className="rounded-3xl bg-linear-to-r from-emerald-800 to-teal-600 p-7 text-white">
-            <div className="mx-auto flex w-fit items-center gap-2 text-center">
-              <img src={worldStar} alt="World Star" />
+          <div className="">
+            <div className="flex w-fit items-center gap-2">
               <h5 className="text-2xl font-bold">My Social Media</h5>
             </div>
 
-            <div className="mt-7 space-y-4">
+            <div className="mt-7 grid grid-cols-2 gap-2">
               {socialMediaItems.length ? (
                 socialMediaItems.map((item) => {
                   const socialIcon = SOCIAL_MEDIA_IMAGE_BY_ID[item.id];
+                  const socialName = SOCIAL_MEDIA_NAME_BY_ID[item.id];
                   const socialUrl = normalizePublicLink(item.url);
 
                   return (
                     <a
                       key={item.id}
                       href={socialUrl}
-                      className="block rounded-full border border-emerald-100/50 bg-white/15 p-4"
+                      className="block rounded-full border border-emerald-400 bg-white p-4 hover:bg-emerald-50 transition"
                       {...renderLinkTarget(socialUrl)}
                     >
                       <div className="mx-auto flex w-fit items-center gap-2">
@@ -461,7 +486,7 @@ export default function KpfContainer({
                           <img
                             src={socialIcon}
                             alt={`${item.label} Icon`}
-                            className="h-5"
+                            className="h-7"
                           />
                         ) : (
                           <FontAwesomeIcon
@@ -469,9 +494,7 @@ export default function KpfContainer({
                             className="h-5"
                           />
                         )}
-                        <p>
-                          {getSocialMediaDisplayValue(item.value || item.url)}
-                        </p>
+                        <p className="font-semibold">{socialName}</p>
                       </div>
                     </a>
                   );
@@ -492,19 +515,21 @@ export default function KpfContainer({
         </section>
 
         <div className="p-4">
-          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7">
-            <div className="flex items-center gap-2">
+          <div className="rounded-3xl border border-emerald-800 p-4">
+            <div className="flex items-start gap-2">
               <img src={safeAlertFill} alt="Alert Icon" className="h-7" />
-              <h6 className="text-xl font-bold text-emerald-800">
-                Anti-Fraud Notice
-              </h6>
+              <div>
+                <h6 className="text-xl font-bold text-emerald-800">
+                  Anti-Fraud Notice
+                </h6>
+                <p className="mt-2 text-zinc-500">
+                  Waspada penipuan mengatasnamakan{" "}
+                  {company?.name || "Perusahaan ini"} . Kami tidak pernah
+                  meminta transfer ke rekening pribadi. Pastikan transaksi hanya
+                  ke rekening resmi perusahaan.
+                </p>
+              </div>
             </div>
-            <p className="mt-2 text-justify md:text-lg">
-              {company?.name || "Perusahaan ini"} tidak pernah meminta transfer
-              ke rekening pribadi. Semua transaksi harus mengikuti prosedur
-              resmi perusahaan dan hanya dilakukan melalui rekening yang
-              terverifikasi.
-            </p>
           </div>
         </div>
       </div>

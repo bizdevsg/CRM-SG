@@ -125,6 +125,7 @@ const SECTION_NAV_ITEMS = [
   { id: "corporate", label: "Corporate", icon: byPrefixAndName.fas.building },
   { id: "social-media", label: "Social Media", icon: byPrefixAndName.fas.globe },
 ];
+const SECTION_SCROLL_OFFSET = 140;
 
 function getCompanyContainer(companyKey) {
   switch (companyKey) {
@@ -142,6 +143,16 @@ function getCompanyContainer(companyKey) {
   }
 }
 
+function getLastReachedSection(sections, viewportMarker) {
+  for (let index = sections.length - 1; index >= 0; index -= 1) {
+    if (sections[index].offsetTop <= viewportMarker) {
+      return sections[index];
+    }
+  }
+
+  return sections[0];
+}
+
 export default function PublicEcardPage() {
   const { marketingSlug, ecardSlug } = useParams();
   const resolvedSlug = marketingSlug || ecardSlug;
@@ -151,6 +162,7 @@ export default function PublicEcardPage() {
   const [activeSection, setActiveSection] = useState("profile");
   const sectionRefs = useRef({});
   const scrollAnimationFrameRef = useRef(null);
+  const syncActiveSectionRef = useRef(() => {});
   const autoScrollingRef = useRef(false);
   const autoScrollReleaseTimeoutRef = useRef(null);
 
@@ -216,41 +228,62 @@ export default function PublicEcardPage() {
       }, 0);
     }
 
-    const sections = SECTION_NAV_ITEMS.map(
-      (item) => sectionRefs.current[item.id],
-    ).filter(Boolean);
+    function syncActiveSection() {
+      if (autoScrollingRef.current) {
+        return;
+      }
 
-    if (!sections.length) {
-      return undefined;
+      const sections = SECTION_NAV_ITEMS.map(
+        (item) => sectionRefs.current[item.id],
+      ).filter(Boolean);
+
+      if (!sections.length) {
+        return;
+      }
+
+      const viewportBottom = window.scrollY + window.innerHeight;
+      const pageBottom = document.documentElement.scrollHeight;
+
+      if (viewportBottom >= pageBottom - 24) {
+        const lastSection = sections[sections.length - 1];
+
+        if (lastSection?.id) {
+          setActiveSection((currentSection) =>
+            currentSection === lastSection.id
+              ? currentSection
+              : lastSection.id,
+          );
+        }
+
+        return;
+      }
+
+      const viewportMarker = window.scrollY + SECTION_SCROLL_OFFSET;
+      const lastReachedSection = getLastReachedSection(
+        sections,
+        viewportMarker,
+      );
+
+      if (!lastReachedSection?.id) {
+        return;
+      }
+
+      setActiveSection((currentSection) =>
+        currentSection === lastReachedSection.id
+          ? currentSection
+          : lastReachedSection.id,
+      );
     }
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (autoScrollingRef.current) {
-          return;
-        }
+    syncActiveSectionRef.current = syncActiveSection;
+    syncActiveSection();
 
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort(
-            (first, second) =>
-              second.intersectionRatio - first.intersectionRatio,
-          )[0];
-
-        if (visibleEntry?.target?.id) {
-          setActiveSection(visibleEntry.target.id);
-        }
-      },
-      {
-        rootMargin: "-18% 0px -52% 0px",
-        threshold: [0.2, 0.35, 0.5, 0.7],
-      },
-    );
-
-    sections.forEach((section) => observer.observe(section));
+    window.addEventListener("scroll", syncActiveSection, { passive: true });
+    window.addEventListener("resize", syncActiveSection);
 
     return () => {
-      observer.disconnect();
+      window.removeEventListener("scroll", syncActiveSection);
+      window.removeEventListener("resize", syncActiveSection);
     };
   }, [ecard]);
 
@@ -269,6 +302,7 @@ export default function PublicEcardPage() {
 
     autoScrollReleaseTimeoutRef.current = window.setTimeout(() => {
       autoScrollingRef.current = false;
+      syncActiveSectionRef.current();
     }, 120);
   }
 
