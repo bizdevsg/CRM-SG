@@ -132,6 +132,14 @@ export default function App() {
           }
         />
         <Route
+          path="marketing/:userId/edit"
+          element={
+            <ProtectedRoute allowedRoles={["superadmin"]}>
+              <UserEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="branch"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>

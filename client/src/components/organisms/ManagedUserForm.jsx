@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import Input from "../atoms/Input";
 import Select from "../atoms/Select";
 import Button from "../atoms/Button";
+import SubmitConfirmationModal from "../atoms/SubmitConfirmationModal";
 import { JOB_TITLE_OPTIONS } from "../../config/jobTitles";
+import useSubmitConfirmation from "../../hooks/useSubmitConfirmation";
 
 function getBranchesByCompany(branches, companyId) {
   return (branches || []).filter((branch) => String(branch.companyId) === String(companyId));
@@ -24,9 +26,16 @@ export default function ManagedUserForm({
   fixedCompanyId = null,
   fixedBranchId = null,
   currentUserId = null,
-  requirePassword = true
+  requirePassword = true,
 }) {
   const [form, setForm] = useState(initialValues);
+  const {
+    isConfirmationOpen,
+    isSubmittingConfirmation,
+    requestConfirmation,
+    closeConfirmation,
+    confirmSubmission,
+  } = useSubmitConfirmation();
 
   const activeCompanyId = fixedCompanyId || form.companyId;
   const activeRole = fixedRole || form.role;
@@ -123,121 +132,160 @@ export default function ManagedUserForm({
 
   async function handleSubmit(event) {
     event.preventDefault();
-    await onSubmit({
-      ...form,
-      role: activeRole,
-      companyId: Number(fixedCompanyId || form.companyId),
-      branchId: Number(fixedBranchId || form.branchId),
-      supervisorId: form.supervisorId ? Number(form.supervisorId) : null,
-      password: form.password || undefined
+
+    requestConfirmation(async () => {
+      await onSubmit({
+        ...form,
+        role: activeRole,
+        companyId: Number(fixedCompanyId || form.companyId),
+        branchId: Number(fixedBranchId || form.branchId),
+        supervisorId: form.supervisorId ? Number(form.supervisorId) : null,
+        password: form.password || undefined,
+      });
     });
   }
 
   return (
-    <form className="grid gap-3" onSubmit={handleSubmit}>
-      <Input
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        placeholder="Nama lengkap"
-        required
-      />
-      <Input
-        name="username"
-        value={form.username}
-        onChange={handleChange}
-        placeholder="Username"
-        required
-      />
-      <Input
-        name="email"
-        type="email"
-        value={form.email}
-        onChange={handleChange}
-        placeholder="Email"
-        required
-      />
-      <Input
-        name="password"
-        type="password"
-        value={form.password}
-        onChange={handleChange}
-        placeholder={requirePassword ? "Password" : "Password baru opsional"}
-        minLength="6"
-        required={requirePassword}
-      />
-      <Input name="nik" value={form.nik} onChange={handleChange} placeholder="NIK" />
-      <Select name="isActive" value={String(form.isActive ?? "true")} onChange={handleChange}>
-        <option value="true">Status Aktif</option>
-        <option value="false">Status Non Aktif</option>
-      </Select>
-      <Input
-        name="licenseNumber"
-        value={form.licenseNumber}
-        onChange={handleChange}
-        placeholder="Nomor izin"
-      />
-      <Select name="positionTitle" value={form.positionTitle} onChange={handleChange}>
-        <option value="">Pilih jabatan asli</option>
-        {JOB_TITLE_OPTIONS.map((jobTitle) => (
-          <option key={jobTitle} value={jobTitle}>
-            {jobTitle}
-          </option>
-        ))}
-      </Select>
-
-      {!fixedRole ? (
-        <Select name="role" value={form.role} onChange={handleChange}>
-          <option value="admin">Admin Cabang</option>
-          <option value="marketing">Marketing</option>
-        </Select>
-      ) : null}
-
-      {!fixedCompanyId ? (
-        <Select name="companyId" value={form.companyId} onChange={handleChange} required>
-          <option value="">Pilih perusahaan</option>
-          {companies.map((company) => (
-            <option key={company.id} value={company.id}>
-              {company.name}
-            </option>
-          ))}
-        </Select>
-      ) : null}
-
-      {!fixedBranchId ? (
-        <Select name="branchId" value={form.branchId} onChange={handleChange} required>
-          <option value="">Pilih cabang</option>
-          {filteredBranches.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name}
-            </option>
-          ))}
-        </Select>
-      ) : null}
-
-      {["admin", "marketing"].includes(activeRole) ? (
-        <Select
-          name="supervisorId"
-          value={form.supervisorId}
+    <>
+      <form className="grid gap-3" onSubmit={handleSubmit}>
+        <Input
+          name="name"
+          value={form.name}
           onChange={handleChange}
-          disabled={!form.positionTitle}
+          placeholder="Nama lengkap"
+          required
+        />
+        <Input
+          name="username"
+          value={form.username}
+          onChange={handleChange}
+          placeholder="Username"
+          required
+        />
+        <Input
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
+          required
+        />
+        <Input
+          name="password"
+          type="password"
+          value={form.password}
+          onChange={handleChange}
+          placeholder={requirePassword ? "Password" : "Password baru opsional"}
+          minLength="6"
+          required={requirePassword}
+        />
+        <Input
+          name="nik"
+          value={form.nik}
+          onChange={handleChange}
+          placeholder="NIK"
+        />
+        <Select
+          name="isActive"
+          value={String(form.isActive ?? "true")}
+          onChange={handleChange}
         >
-          <option value="">
-            {!form.positionTitle
-              ? "Pilih jabatan user dulu"
-              : supervisorOptions.length
-                ? "Pilih atasan"
-                : "Tidak ada atasan yang lebih tinggi"}
-          </option>
-          {supervisorOptions.map((candidate) => (
-            <option key={candidate.id} value={candidate.id}>
-              {candidate.name} - {candidate.positionTitle || "Tanpa jabatan"}
+          <option value="true">Status Aktif</option>
+          <option value="false">Status Non Aktif</option>
+        </Select>
+        <Input
+          name="licenseNumber"
+          value={form.licenseNumber}
+          onChange={handleChange}
+          placeholder="Nomor izin"
+        />
+        <Select
+          name="positionTitle"
+          value={form.positionTitle}
+          onChange={handleChange}
+        >
+          <option value="">Pilih jabatan asli</option>
+          {JOB_TITLE_OPTIONS.map((jobTitle) => (
+            <option key={jobTitle} value={jobTitle}>
+              {jobTitle}
             </option>
           ))}
         </Select>
-      ) : null}
 
-      <Button type="submit">{submitLabel}</Button>
-    </form>
+        {!fixedRole ? (
+          <Select name="role" value={form.role} onChange={handleChange}>
+            <option value="admin">Admin Cabang</option>
+            <option value="marketing">Marketing</option>
+          </Select>
+        ) : null}
+
+        {!fixedCompanyId ? (
+          <Select
+            name="companyId"
+            value={form.companyId}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Pilih perusahaan</option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>
+                {company.name}
+              </option>
+            ))}
+          </Select>
+        ) : null}
+
+        {!fixedBranchId ? (
+          <Select
+            name="branchId"
+            value={form.branchId}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Pilih cabang</option>
+            {filteredBranches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </Select>
+        ) : null}
+
+        {["admin", "marketing"].includes(activeRole) ? (
+          <Select
+            name="supervisorId"
+            value={form.supervisorId}
+            onChange={handleChange}
+            disabled={!form.positionTitle}
+          >
+            <option value="">
+              {!form.positionTitle
+                ? "Pilih jabatan user dulu"
+                : supervisorOptions.length
+                  ? "Pilih atasan"
+                  : "Tidak ada atasan yang lebih tinggi"}
+            </option>
+            {supervisorOptions.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.name} - {candidate.positionTitle || "Tanpa jabatan"}
+              </option>
+            ))}
+          </Select>
+        ) : null}
+
+        <Button type="submit" disabled={isSubmittingConfirmation}>
+          {submitLabel}
+        </Button>
+      </form>
+      <SubmitConfirmationModal
+        open={isConfirmationOpen}
+        title="Simpan data pengguna?"
+        message="Perubahan akun, role, cabang, jabatan, dan atasan akan disimpan. Pastikan semua data sudah sesuai."
+        confirmLabel={submitLabel}
+        onConfirm={confirmSubmission}
+        onCancel={closeConfirmation}
+        submitting={isSubmittingConfirmation}
+      />
+    </>
   );
 }

@@ -1,4 +1,8 @@
-import { faCircleCheck as farCircleCheck } from "@fortawesome/free-regular-svg-icons";
+import {
+  faCircleCheck as farCircleCheck,
+  faEye as farEye,
+  faEyeSlash as farEyeSlash,
+} from "@fortawesome/free-regular-svg-icons";
 import {
   faAddressBook,
   faAward,
@@ -16,11 +20,15 @@ import {
   faShieldAlt,
   faTriangleExclamation,
   faUser,
+  faEye,
+  faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
 
 export const byPrefixAndName = {
   far: {
     "circle-check": farCircleCheck,
+    eye: farEye,
+    "eye-slash": farEyeSlash,
   },
   fas: {
     "address-book": faAddressBook,
@@ -37,6 +45,7 @@ export const byPrefixAndName = {
     "scale-balanced": faScaleBalanced,
     shield: faShield,
     "shield-alt": faShieldAlt,
+    "eye": faEye,
     "triangle-exclamation": faTriangleExclamation,
     user: faUser,
   },

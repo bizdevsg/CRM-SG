@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import Input from "../atoms/Input";
 import Button from "../atoms/Button";
+import SubmitConfirmationModal from "../atoms/SubmitConfirmationModal";
+import useSubmitConfirmation from "../../hooks/useSubmitConfirmation";
 
 export default function CertificateForm({ initialValues, onSubmit, submitLabel }) {
   const [title, setTitle] = useState(initialValues.title || "");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(initialValues.imagePath || "");
+  const {
+    isConfirmationOpen,
+    isSubmittingConfirmation,
+    requestConfirmation,
+    closeConfirmation,
+    confirmSubmission,
+  } = useSubmitConfirmation();
 
   useEffect(() => {
     setTitle(initialValues.title || "");
@@ -41,31 +50,46 @@ export default function CertificateForm({ initialValues, onSubmit, submitLabel }
       formData.append("imageFile", imageFile);
     }
 
-    await onSubmit(formData);
+    requestConfirmation(async () => {
+      await onSubmit(formData);
+    });
   }
 
   return (
-    <form className="grid gap-3" onSubmit={handleSubmit}>
-      <Input
-        name="title"
-        value={title}
-        onChange={(event) => setTitle(event.target.value)}
-        placeholder="Nama sertifikat"
-        required
-      />
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm font-semibold text-slate-700">Upload Gambar Sertifikat</p>
-        <div className="mt-3 space-y-3">
-          <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageChange} />
-          {imagePreview ? (
-            <img src={imagePreview} alt="Preview sertifikat" className="h-40 w-full rounded-2xl object-cover" />
-          ) : null}
-          <p className="text-xs leading-5 text-slate-500">
-            Format JPG, PNG, atau WEBP. Maksimal 5MB.
-          </p>
+    <>
+      <form className="grid gap-3" onSubmit={handleSubmit}>
+        <Input
+          name="title"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder="Nama sertifikat"
+          required
+        />
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-semibold text-slate-700">Upload Gambar Sertifikat</p>
+          <div className="mt-3 space-y-3">
+            <Input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleImageChange} />
+            {imagePreview ? (
+              <img src={imagePreview} alt="Preview sertifikat" className="h-40 w-full rounded-2xl object-cover" />
+            ) : null}
+            <p className="text-xs leading-5 text-slate-500">
+              Format JPG, PNG, atau WEBP. Maksimal 5MB.
+            </p>
+          </div>
         </div>
-      </div>
-      <Button type="submit">{submitLabel}</Button>
-    </form>
+        <Button type="submit" disabled={isSubmittingConfirmation}>
+          {submitLabel}
+        </Button>
+      </form>
+      <SubmitConfirmationModal
+        open={isConfirmationOpen}
+        title="Simpan data sertifikat?"
+        message="Judul dan gambar sertifikat akan disimpan ke profil e-card Anda."
+        confirmLabel={submitLabel}
+        onConfirm={confirmSubmission}
+        onCancel={closeConfirmation}
+        submitting={isSubmittingConfirmation}
+      />
+    </>
   );
 }

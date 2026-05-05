@@ -9,7 +9,8 @@ export default function BranchPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Cabang Saya</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Ringkasan detail cabang, PT, dan performa resource marketing yang Anda kelola.
+          Ringkasan detail cabang, PT, dan performa resource marketing yang Anda
+          kelola.
         </p>
       </div>
 
@@ -20,19 +21,25 @@ export default function BranchPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
               Perusahaan
             </p>
-            <p className="mt-2 text-base font-bold text-slate-900">{dashboard?.branch?.companyName}</p>
+            <p className="mt-2 text-base font-bold text-slate-900">
+              {dashboard?.branch?.companyName}
+            </p>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
               Nama Cabang
             </p>
-            <p className="mt-2 text-base font-bold text-slate-900">{dashboard?.branch?.name}</p>
+            <p className="mt-2 text-base font-bold text-slate-900">
+              {dashboard?.branch?.name}
+            </p>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
               Kode Cabang
             </p>
-            <p className="mt-2 text-base font-bold text-slate-900">{dashboard?.branch?.code}</p>
+            <p className="mt-2 text-base font-bold text-slate-900">
+              {dashboard?.branch?.code}
+            </p>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
@@ -48,7 +55,9 @@ export default function BranchPage() {
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
             Alamat Cabang
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-700">{dashboard?.branch?.address}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            {dashboard?.branch?.address}
+          </p>
         </div>
       </Card>
     </div>

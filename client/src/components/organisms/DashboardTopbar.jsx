@@ -29,6 +29,13 @@ function resolveHeaderContent(pathname, currentMenu, fallbackTitle, fallbackSubt
     };
   }
 
+  if (/^\/dashboard\/marketing\/[^/]+\/edit$/.test(pathname)) {
+    return {
+      title: "Edit Marketing",
+      subtitle: "Perbarui data akun marketing yang sudah terdaftar."
+    };
+  }
+
   return {
     title: currentMenu?.label || fallbackTitle,
     subtitle: fallbackSubtitle

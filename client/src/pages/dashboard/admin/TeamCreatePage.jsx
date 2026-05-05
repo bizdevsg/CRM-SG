@@ -36,6 +36,7 @@ export default function TeamCreatePage() {
         users={[...(dashboard?.marketingTeam || []), ...(user ? [user] : [])]}
         fixedCompanyId={user?.companyId || null}
         fixedBranchId={user?.branchId || null}
+        onImportSuccess={() => navigate("/dashboard/team")}
       />
 
       <Card className="p-6">

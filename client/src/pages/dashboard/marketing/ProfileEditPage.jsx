@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Card from "../../../components/atoms/Card";
 import Input from "../../../components/atoms/Input";
 import Button from "../../../components/atoms/Button";
+import SubmitConfirmationModal from "../../../components/atoms/SubmitConfirmationModal";
 import { useDashboard } from "../../../context/DashboardContext";
 import { JOB_TITLE_OPTIONS } from "../../../config/jobTitles";
 import Select from "../../../components/atoms/Select";
+import useSubmitConfirmation from "../../../hooks/useSubmitConfirmation";
 
 const PHOTO_CROP_RATIO = 3 / 4;
 const PHOTO_CROP_VIEWPORT_WIDTH = 276;
@@ -264,6 +267,7 @@ function ProfilePhotoCardPreview({
 
 export default function ProfileEditPage() {
   const { dashboard, updateProfile, updateSocialMedia } = useDashboard();
+  const navigate = useNavigate();
   const photoInputRef = useRef(null);
   const cropDragRef = useRef(null);
   const [profileForm, setProfileForm] = useState({
@@ -292,6 +296,20 @@ export default function ProfileEditPage() {
   const [photoPreview, setPhotoPreview] = useState("");
   const [photoError, setPhotoError] = useState("");
   const [photoFormatModalMessage, setPhotoFormatModalMessage] = useState("");
+  const {
+    isConfirmationOpen: isProfileConfirmationOpen,
+    isSubmittingConfirmation: isSubmittingProfileConfirmation,
+    requestConfirmation: requestProfileConfirmation,
+    closeConfirmation: closeProfileConfirmation,
+    confirmSubmission: confirmProfileSubmission,
+  } = useSubmitConfirmation();
+  const {
+    isConfirmationOpen: isSocialMediaConfirmationOpen,
+    isSubmittingConfirmation: isSubmittingSocialMediaConfirmation,
+    requestConfirmation: requestSocialMediaConfirmation,
+    closeConfirmation: closeSocialMediaConfirmation,
+    confirmSubmission: confirmSocialMediaSubmission,
+  } = useSubmitConfirmation();
   const [cropModal, setCropModal] = useState({
     open: false,
     sourceUrl: "",
@@ -614,16 +632,25 @@ export default function ProfileEditPage() {
       formData.append("photoFile", photoFile);
     }
 
-    const success = await updateProfile(formData);
+    requestProfileConfirmation(async () => {
+      const success = await updateProfile(formData);
 
-    if (success) {
-      setPhotoFile(null);
-    }
+      if (success) {
+        setPhotoFile(null);
+        navigate("/dashboard/profile");
+      }
+    });
   }
 
   async function handleSocialMediaSubmit(event) {
     event.preventDefault();
-    await updateSocialMedia(socialMediaForm);
+    requestSocialMediaConfirmation(async () => {
+      const success = await updateSocialMedia(socialMediaForm);
+
+      if (success) {
+        navigate("/dashboard/profile");
+      }
+    });
   }
 
   return (
@@ -777,7 +804,12 @@ export default function ProfileEditPage() {
             <p className="text-right text-xs text-slate-500">
               {profileForm.description.length}/500 karakter
             </p>
-            <Button type="submit">Simpan Profil</Button>
+            <Button
+              type="submit"
+              disabled={isSubmittingProfileConfirmation}
+            >
+              Simpan Profil
+            </Button>
           </form>
         </Card>
 
@@ -846,10 +878,35 @@ export default function ProfileEditPage() {
                 placeholder="URL LinkedIn"
               />
             </div>
-            <Button type="submit">Simpan Social Media</Button>
+            <Button
+              type="submit"
+              disabled={isSubmittingSocialMediaConfirmation}
+            >
+              Simpan Social Media
+            </Button>
           </form>
         </Card>
       </div>
+
+      <SubmitConfirmationModal
+        open={isProfileConfirmationOpen}
+        title="Simpan perubahan profil?"
+        message="Data profil marketing, deskripsi, nomor telepon, dan foto yang sudah Anda atur akan diperbarui."
+        confirmLabel="Simpan Profil"
+        onConfirm={confirmProfileSubmission}
+        onCancel={closeProfileConfirmation}
+        submitting={isSubmittingProfileConfirmation}
+      />
+
+      <SubmitConfirmationModal
+        open={isSocialMediaConfirmationOpen}
+        title="Simpan perubahan social media?"
+        message="Username dan URL social media marketing akan diperbarui sesuai data terbaru yang Anda isi."
+        confirmLabel="Simpan Social Media"
+        onConfirm={confirmSocialMediaSubmission}
+        onCancel={closeSocialMediaConfirmation}
+        submitting={isSubmittingSocialMediaConfirmation}
+      />
 
       {photoFormatModalMessage ? (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">

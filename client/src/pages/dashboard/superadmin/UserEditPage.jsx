@@ -10,12 +10,13 @@ export default function UserEditPage() {
   const navigate = useNavigate();
   const allUsers = [...(dashboard?.admins || []), ...(dashboard?.marketingTeam || [])];
   const user = allUsers.find((item) => String(item.id) === String(userId));
+  const returnPath = user?.role === "marketing" ? "/dashboard/marketing" : "/dashboard/users";
 
   async function handleSubmit(payload) {
     const success = await updateManagedUser(userId, payload);
 
     if (success) {
-      navigate("/dashboard/users");
+      navigate(returnPath);
     }
   }
 

@@ -2,60 +2,23 @@ import { useMemo, useState } from "react";
 import Button from "../atoms/Button";
 import Card from "../atoms/Card";
 import Input from "../atoms/Input";
-import { JOB_TITLE_OPTIONS } from "../../config/jobTitles";
 import { useAuth } from "../../context/AuthContext";
 import { useDashboard } from "../../context/DashboardContext";
 import { apiFetch } from "../../services/api";
 
 const HEADER_NAME_BY_KEY = {
-  name: "name",
-  fullname: "name",
-  nama: "name",
-  username: "username",
-  email: "email",
-  password: "password",
-  nik: "nik",
-  isactive: "isActive",
-  status: "isActive",
-  licensenumber: "licenseNumber",
-  nomorizin: "licenseNumber",
-  positiontitle: "positionTitle",
-  jabatan: "positionTitle",
-  supervisoremail: "supervisorEmail",
-  supervisorusername: "supervisorUsername",
   companyid: "companyId",
   companyname: "companyName",
   perusahaan: "companyName",
-  branchid: "branchId",
-  branchname: "branchName",
-  cabang: "branchName",
+  branchname: "name",
+  cabang: "name",
+  name: "name",
+  nama: "name",
+  address: "address",
+  alamat: "address",
 };
 
-const ADMIN_TEMPLATE_HEADERS = [
-  "name",
-  "username",
-  "email",
-  "password",
-  "nik",
-  "isActive",
-  "licenseNumber",
-  "positionTitle",
-  "supervisorEmail",
-];
-
-const SUPERADMIN_TEMPLATE_HEADERS = [
-  "name",
-  "username",
-  "email",
-  "password",
-  "companyName",
-  "branchName",
-  "nik",
-  "isActive",
-  "licenseNumber",
-  "positionTitle",
-  "supervisorEmail",
-];
+const TEMPLATE_HEADERS = ["companyName", "name", "address"];
 
 function normalizeLookup(value) {
   return String(value || "").trim().toLowerCase();
@@ -198,72 +161,6 @@ function readFileAsText(file) {
   });
 }
 
-function parseIsActive(value) {
-  const normalizedValue = normalizeLookup(value);
-
-  if (!normalizedValue) {
-    return "true";
-  }
-
-  if (["true", "1", "yes", "y", "aktif"].includes(normalizedValue)) {
-    return "true";
-  }
-
-  if (["false", "0", "no", "n", "nonaktif", "non-aktif"].includes(normalizedValue)) {
-    return "false";
-  }
-
-  return null;
-}
-
-function buildTemplateCsv(mode, companies, branches, fixedCompanyId, fixedBranchId) {
-  const templateHeaders =
-    mode === "superadmin" ? SUPERADMIN_TEMPLATE_HEADERS : ADMIN_TEMPLATE_HEADERS;
-  const activeCompany = (companies || []).find(
-    (company) => String(company.id) === String(fixedCompanyId || "")
-  );
-  const activeBranch = (branches || []).find(
-    (branch) => String(branch.id) === String(fixedBranchId || "")
-  );
-  const sampleCompanyName = activeCompany?.name || companies?.[0]?.name || "Nama PT";
-  const sampleBranchName =
-    activeBranch?.name ||
-    branches?.find((branch) =>
-      fixedCompanyId
-        ? String(branch.companyId) === String(fixedCompanyId)
-        : String(branch.companyId) === String(companies?.[0]?.id || "")
-    )?.name ||
-    "Nama Cabang";
-  const sampleValues =
-    mode === "superadmin"
-      ? [
-          "Rina Pratama",
-          "rina.pratama",
-          "rina.pratama@example.com",
-          "password123",
-          sampleCompanyName,
-          sampleBranchName,
-          "3174XXXXXXXXXXXX",
-          "true",
-          "BAPPEBTI-001",
-          "Business Consultant (BC)",
-          "",
-        ]
-      : [
-          "Rina Pratama",
-          "rina.pratama",
-          "rina.pratama@example.com",
-          "password123",
-          "3174XXXXXXXXXXXX",
-          "true",
-          "BAPPEBTI-001",
-          "Business Consultant (BC)",
-          "",
-        ];
-
-  return `${templateHeaders.join(",")}\n${sampleValues.map(escapeCsvCell).join(",")}\n`;
-}
-
 function escapeCsvCell(value) {
   const stringValue = String(value || "");
 
@@ -272,6 +169,13 @@ function escapeCsvCell(value) {
   }
 
   return stringValue;
+}
+
+function buildTemplateCsv(companies) {
+  const sampleCompanyName = companies?.[0]?.name || "PT Contoh";
+  const sampleValues = [sampleCompanyName, "Cabang Bandung", "Jl. Asia Afrika No. 10, Bandung"];
+
+  return `${TEMPLATE_HEADERS.join(",")}\n${sampleValues.map(escapeCsvCell).join(",")}\n`;
 }
 
 function findCompany(companies, companyId, companyName) {
@@ -288,31 +192,7 @@ function findCompany(companies, companyId, companyName) {
   return null;
 }
 
-function findBranch(branches, branchId, branchName, companyId) {
-  if (branchId) {
-    return (branches || []).find((branch) => String(branch.id) === String(branchId));
-  }
-
-  if (!branchName) {
-    return null;
-  }
-
-  return (branches || []).find((branch) => {
-    if (companyId && String(branch.companyId) !== String(companyId)) {
-      return false;
-    }
-
-    return normalizeLookup(branch.name) === normalizeLookup(branchName);
-  });
-}
-
-function buildImportPreview({
-  parsedFile,
-  companies,
-  branches,
-  fixedCompanyId,
-  fixedBranchId,
-}) {
+function buildImportPreview({ parsedFile, companies, branches }) {
   if (!parsedFile) {
     return null;
   }
@@ -322,30 +202,16 @@ function buildImportPreview({
   const headerErrors = [];
   const validationErrors = [];
   const readyEntries = [];
-  const seenEmails = new Map();
-  const seenUsernames = new Map();
-  const isFixedBranchMode = Boolean(fixedBranchId);
+  const seenBranchKeys = new Map();
 
-  ["name", "username", "email", "password"].forEach((header) => {
+  ["name", "address"].forEach((header) => {
     if (!headerSet.has(header)) {
       headerErrors.push(`Kolom \`${header}\` wajib ada pada file CSV.`);
     }
   });
 
-  if (!isFixedBranchMode) {
-    if (!headerSet.has("branchId") && !headerSet.has("branchName")) {
-      headerErrors.push("Kolom `branchId` atau `branchName` wajib ada untuk import lintas cabang.");
-    }
-
-    if (!headerSet.has("branchId") && headerSet.has("branchName")) {
-      const hasCompanyIdentity = headerSet.has("companyId") || headerSet.has("companyName");
-
-      if (!hasCompanyIdentity) {
-        headerErrors.push(
-          "Jika memakai `branchName`, tambahkan juga kolom `companyId` atau `companyName`."
-        );
-      }
-    }
+  if (!headerSet.has("companyId") && !headerSet.has("companyName")) {
+    headerErrors.push("Kolom `companyId` atau `companyName` wajib ada pada file CSV.");
   }
 
   if (headerErrors.length) {
@@ -361,93 +227,37 @@ function buildImportPreview({
     const rowValues = row.values || {};
     const rowErrors = [];
     const name = rowValues.name || "";
-    const username = rowValues.username || "";
-    const email = rowValues.email || "";
-    const password = rowValues.password || "";
-    const nik = rowValues.nik || "";
-    const licenseNumber = rowValues.licenseNumber || "";
-    const positionTitle = rowValues.positionTitle || "";
-    const supervisorEmail = rowValues.supervisorEmail || "";
-    const supervisorUsername = rowValues.supervisorUsername || "";
-    const isActive = parseIsActive(rowValues.isActive);
+    const address = rowValues.address || "";
+    const resolvedCompany = findCompany(companies, rowValues.companyId, rowValues.companyName);
 
-    if (!name || !username || !email || !password) {
-      rowErrors.push("Nama, username, email, dan password wajib diisi.");
+    if (!name || !address) {
+      rowErrors.push("Nama cabang dan alamat wajib diisi.");
     }
 
-    if (password && password.length < 6) {
-      rowErrors.push("Password minimal 6 karakter.");
+    if (!resolvedCompany) {
+      rowErrors.push("Perusahaan tidak ditemukan.");
     }
 
-    if (positionTitle && !JOB_TITLE_OPTIONS.includes(positionTitle)) {
-      rowErrors.push("Jabatan tidak sesuai daftar yang tersedia.");
-    }
+    const branchKey = resolvedCompany
+      ? `${resolvedCompany.id}:${normalizeLookup(name)}`
+      : `unknown:${normalizeLookup(name)}`;
 
-    if (rowValues.isActive && isActive === null) {
-      rowErrors.push("Nilai isActive hanya boleh true/false, aktif/nonaktif, 1/0, yes/no.");
-    }
-
-    let resolvedCompanyId = fixedCompanyId ? Number(fixedCompanyId) : null;
-    let resolvedBranch = fixedBranchId
-      ? {
-          id: Number(fixedBranchId),
-          companyId: fixedCompanyId ? Number(fixedCompanyId) : null,
-        }
-      : null;
-
-    if (!resolvedBranch) {
-      const resolvedCompany = findCompany(
-        companies,
-        rowValues.companyId,
-        rowValues.companyName
+    if (resolvedCompany) {
+      const existingBranch = (branches || []).find(
+        (branch) =>
+          String(branch.companyId) === String(resolvedCompany.id) &&
+          normalizeLookup(branch.name) === normalizeLookup(name)
       );
 
-      if (rowValues.companyId || rowValues.companyName) {
-        if (!resolvedCompany) {
-          rowErrors.push("Perusahaan tidak ditemukan.");
-        } else {
-          resolvedCompanyId = resolvedCompany.id;
-        }
+      if (existingBranch) {
+        rowErrors.push("Cabang dengan nama yang sama pada PT ini sudah ada.");
       }
+    }
 
-      resolvedBranch = findBranch(
-        branches,
-        rowValues.branchId,
-        rowValues.branchName,
-        resolvedCompanyId
-      );
-
-      if (!resolvedBranch) {
-        rowErrors.push("Cabang tidak ditemukan.");
-      } else if (
-        resolvedCompanyId &&
-        String(resolvedBranch.companyId) !== String(resolvedCompanyId)
-      ) {
-        rowErrors.push("Cabang tidak cocok dengan perusahaan yang dipilih.");
-      } else {
-        resolvedCompanyId = resolvedBranch.companyId;
-      }
+    if (seenBranchKeys.has(branchKey)) {
+      rowErrors.push(`Cabang duplikat dengan baris ${seenBranchKeys.get(branchKey)}.`);
     } else {
-      resolvedCompanyId = resolvedBranch.companyId;
-    }
-
-    const normalizedEmail = normalizeLookup(email);
-    const normalizedUsername = normalizeLookup(username);
-
-    if (normalizedEmail) {
-      if (seenEmails.has(normalizedEmail)) {
-        rowErrors.push(`Email duplikat dengan baris ${seenEmails.get(normalizedEmail)}.`);
-      } else {
-        seenEmails.set(normalizedEmail, row.rowNumber);
-      }
-    }
-
-    if (normalizedUsername) {
-      if (seenUsernames.has(normalizedUsername)) {
-        rowErrors.push(`Username duplikat dengan baris ${seenUsernames.get(normalizedUsername)}.`);
-      } else {
-        seenUsernames.set(normalizedUsername, row.rowNumber);
-      }
+      seenBranchKeys.set(branchKey, row.rowNumber);
     }
 
     if (rowErrors.length) {
@@ -461,19 +271,9 @@ function buildImportPreview({
     readyEntries.push({
       rowNumber: row.rowNumber,
       payload: {
+        companyId: Number(resolvedCompany.id),
         name,
-        username,
-        email,
-        password,
-        nik,
-        isActive,
-        licenseNumber,
-        positionTitle,
-        role: "marketing",
-        branchId: Number(resolvedBranch.id),
-        companyId: Number(resolvedCompanyId),
-        supervisorEmail,
-        supervisorUsername,
+        address,
       },
     });
   });
@@ -486,41 +286,9 @@ function buildImportPreview({
   };
 }
 
-function findSupervisor(users, entry) {
-  const supervisorEmail = normalizeLookup(entry.payload.supervisorEmail);
-  const supervisorUsername = normalizeLookup(entry.payload.supervisorUsername);
-
-  if (!supervisorEmail && !supervisorUsername) {
-    return null;
-  }
-
-  return (users || []).find((candidate) => {
-    const isSameBranch =
-      String(candidate.companyId || "") === String(entry.payload.companyId || "") &&
-      String(candidate.branchId || "") === String(entry.payload.branchId || "");
-
-    if (!isSameBranch) {
-      return false;
-    }
-
-    if (supervisorEmail && normalizeLookup(candidate.email) === supervisorEmail) {
-      return true;
-    }
-
-    if (supervisorUsername && normalizeLookup(candidate.username) === supervisorUsername) {
-      return true;
-    }
-
-    return false;
-  });
-}
-
-export default function MarketingCsvImportPanel({
+export default function BranchCsvImportPanel({
   companies,
   branches,
-  users,
-  fixedCompanyId = null,
-  fixedBranchId = null,
   onImportSuccess = null,
 }) {
   const { token } = useAuth();
@@ -530,7 +298,6 @@ export default function MarketingCsvImportPanel({
   const [panelError, setPanelError] = useState("");
   const [importResult, setImportResult] = useState(null);
   const [importing, setImporting] = useState(false);
-  const mode = fixedBranchId ? "admin" : "superadmin";
 
   const preview = useMemo(
     () =>
@@ -538,10 +305,8 @@ export default function MarketingCsvImportPanel({
         parsedFile,
         companies,
         branches,
-        fixedCompanyId,
-        fixedBranchId,
       }),
-    [parsedFile, companies, branches, fixedCompanyId, fixedBranchId]
+    [parsedFile, companies, branches]
   );
 
   async function handleFileChange(event) {
@@ -570,22 +335,13 @@ export default function MarketingCsvImportPanel({
   }
 
   function handleDownloadTemplate() {
-    const csvContent = buildTemplateCsv(
-      mode,
-      companies,
-      branches,
-      fixedCompanyId,
-      fixedBranchId
-    );
+    const csvContent = buildTemplateCsv(companies);
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const downloadUrl = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
 
     anchor.href = downloadUrl;
-    anchor.download =
-      mode === "superadmin"
-        ? "template-import-marketing-superadmin.csv"
-        : "template-import-marketing-cabang.csv";
+    anchor.download = "template-import-cabang.csv";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -624,45 +380,22 @@ export default function MarketingCsvImportPanel({
 
     setImporting(true);
 
-    const knownUsers = [...(users || [])];
     const importedRows = [];
     const failedRows = [...preview.validationErrors];
 
     try {
       for (const entry of preview.readyEntries) {
-        const supervisor = findSupervisor(knownUsers, entry);
-
-        if (
-          (entry.payload.supervisorEmail || entry.payload.supervisorUsername) &&
-          !supervisor
-        ) {
-          failedRows.push({
-            rowNumber: entry.rowNumber,
-            message:
-              "Atasan tidak ditemukan pada PT/cabang yang sama. Gunakan supervisorEmail atau supervisorUsername yang sudah terdaftar.",
-          });
-          continue;
-        }
-
         try {
-          const response = await apiFetch("/management/users", {
+          await apiFetch("/management/branches", {
             method: "POST",
             token,
-            body: {
-              ...entry.payload,
-              supervisorId: supervisor?.id || null,
-            },
+            body: entry.payload,
           });
 
           importedRows.push({
             rowNumber: entry.rowNumber,
             name: entry.payload.name,
-            email: entry.payload.email,
           });
-
-          if (response.user) {
-            knownUsers.push(response.user);
-          }
         } catch (error) {
           failedRows.push({
             rowNumber: entry.rowNumber,
@@ -676,18 +409,16 @@ export default function MarketingCsvImportPanel({
       }
 
       const failureCount = failedRows.length;
-      const successMessage =
-        failureCount === 0
-          ? `Import selesai. ${importedRows.length} akun marketing berhasil ditambahkan.`
-          : "";
-      const errorMessage =
-        failureCount > 0
-          ? `Import selesai sebagian. ${importedRows.length} berhasil, ${failureCount} gagal.`
-          : "";
 
       setFeedback({
-        error: errorMessage,
-        success: successMessage,
+        error:
+          failureCount > 0
+            ? `Import selesai sebagian. ${importedRows.length} berhasil, ${failureCount} gagal.`
+            : "",
+        success:
+          failureCount === 0
+            ? `Import selesai. ${importedRows.length} cabang berhasil ditambahkan.`
+            : "",
       });
       setImportResult({
         totalRows: preview.totalRows,
@@ -707,17 +438,15 @@ export default function MarketingCsvImportPanel({
     }
   }
 
-  const templateHeaders =
-    mode === "superadmin" ? SUPERADMIN_TEMPLATE_HEADERS : ADMIN_TEMPLATE_HEADERS;
   const visibleFailures = importResult?.failedRows?.slice(0, 6) || [];
 
   return (
     <Card className="p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
-          <h3 className="text-xl font-bold text-slate-900">Import Marketing via CSV</h3>
+          <h3 className="text-xl font-bold text-slate-900">Import Cabang via CSV</h3>
           <p className="text-sm leading-6 text-slate-500">
-            Unggah banyak akun marketing sekaligus memakai template CSV yang sudah disiapkan.
+            Unggah banyak cabang sekaligus, lalu sistem akan membuatkannya ke PT yang sesuai.
           </p>
         </div>
 
@@ -731,28 +460,17 @@ export default function MarketingCsvImportPanel({
           Header Template
         </p>
         <p className="mt-2 break-all font-mono text-xs leading-6 text-slate-700">
-          {templateHeaders.join(", ")}
+          {TEMPLATE_HEADERS.join(", ")}
         </p>
         <p className="mt-3 text-sm leading-6 text-slate-500">
-          Kolom wajib: <strong>name</strong>, <strong>username</strong>, <strong>email</strong>,{" "}
-          <strong>password</strong>.
-          {mode === "superadmin"
-            ? " Tambahkan branchName + companyName atau langsung branchId untuk tiap baris."
-            : " File akan otomatis masuk ke PT dan cabang admin yang sedang login."}
-        </p>
-        <p className="mt-2 text-sm leading-6 text-slate-500">
-          Kolom <strong>supervisorEmail</strong> atau <strong>supervisorUsername</strong>{" "}
-          bersifat opsional, tetapi supervisor harus sudah ada di PT dan cabang yang sama.
+          Kolom wajib: <strong>companyName</strong> atau <strong>companyId</strong>,{" "}
+          <strong>name</strong>, dan <strong>address</strong>.
         </p>
       </div>
 
       <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
         <Input type="file" accept=".csv,text/csv" onChange={handleFileChange} />
-        <Button
-          className="px-5"
-          onClick={handleImport}
-          disabled={importing || !parsedFile}
-        >
+        <Button className="px-5" onClick={handleImport} disabled={importing || !parsedFile}>
           {importing ? "Mengimpor..." : "Import CSV"}
         </Button>
       </div>
@@ -802,7 +520,9 @@ export default function MarketingCsvImportPanel({
 
           {preview.validationErrors.length ? (
             <div className="mt-4 space-y-2">
-              <p className="text-sm font-semibold text-slate-700">Contoh baris yang perlu diperbaiki:</p>
+              <p className="text-sm font-semibold text-slate-700">
+                Contoh baris yang perlu diperbaiki:
+              </p>
               <div className="space-y-2">
                 {preview.validationErrors.slice(0, 5).map((errorItem) => (
                   <div
@@ -822,7 +542,7 @@ export default function MarketingCsvImportPanel({
         <div className="mt-4 rounded-[24px] border border-slate-200 bg-white p-4">
           <h4 className="text-base font-bold text-slate-900">Hasil Import</h4>
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            {importResult.importedRows.length} akun berhasil ditambahkan dari {importResult.totalRows}{" "}
+            {importResult.importedRows.length} cabang berhasil ditambahkan dari {importResult.totalRows}{" "}
             baris data.
           </p>
 
@@ -850,11 +570,6 @@ export default function MarketingCsvImportPanel({
           )}
         </div>
       ) : null}
-
-      <div className="mt-4 rounded-[24px] border border-sky-100 bg-sky-50/70 px-4 py-3 text-sm leading-6 text-sky-800">
-        Daftar jabatan yang didukung:{" "}
-        {JOB_TITLE_OPTIONS.map((jobTitle) => escapeCsvCell(jobTitle)).join(", ")}
-      </div>
     </Card>
   );
 }

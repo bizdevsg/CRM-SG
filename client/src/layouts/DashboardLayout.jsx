@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import SidebarNavigation from "../components/organisms/SidebarNavigation";
 import DashboardTopbar from "../components/organisms/DashboardTopbar";
 import StatusAlert from "../components/atoms/StatusAlert";
+import SubmitConfirmationModal from "../components/atoms/SubmitConfirmationModal";
 import { useAuth } from "../context/AuthContext";
 import { useDashboard } from "../context/DashboardContext";
+import useSubmitConfirmation from "../hooks/useSubmitConfirmation";
 
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
@@ -12,6 +14,13 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const {
+    isConfirmationOpen,
+    isSubmittingConfirmation,
+    requestConfirmation,
+    closeConfirmation,
+    confirmSubmission,
+  } = useSubmitConfirmation();
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -26,8 +35,10 @@ export default function DashboardLayout() {
   }, [sidebarOpen]);
 
   function handleLogout() {
-    logout();
-    navigate("/login", { replace: true });
+    requestConfirmation(async () => {
+      logout();
+      navigate("/login", { replace: true });
+    });
   }
 
   return (
@@ -59,6 +70,15 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+      <SubmitConfirmationModal
+        open={isConfirmationOpen}
+        title="Keluar dari dashboard?"
+        message="Sesi Anda akan diakhiri dan Anda akan diarahkan kembali ke halaman login."
+        confirmLabel="Ya, logout"
+        onConfirm={confirmSubmission}
+        onCancel={closeConfirmation}
+        submitting={isSubmittingConfirmation}
+      />
     </div>
   );
 }

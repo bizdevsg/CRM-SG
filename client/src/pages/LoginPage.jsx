@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { byPrefixAndName } from "../utils/fontawesome";
 
 const inputClassName =
   "mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none ring-0 placeholder:text-slate-400 transition focus:border-[color:var(--teal)] focus:shadow-[0_0_0_4px_rgba(47,111,237,0.08)]";
@@ -14,6 +16,7 @@ export default function LoginPage() {
     password: "",
   });
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event) {
@@ -80,15 +83,36 @@ export default function LoginPage() {
 
               <label className="block text-sm font-medium text-slate-700">
                 Password
-                <input
-                  className={inputClassName}
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="Masukkan password"
-                  required
-                />
+                <div className="relative mt-2">
+                  <input
+                    className={`${inputClassName} mt-0 pr-20`}
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Masukkan password"
+                    required
+                  />
+                  <button
+                    className="absolute inset-y-0 right-3 top-2 my-auto inline-flex h-fit items-center gap-2 rounded-full border border-slate-300 bg-slate-50 p-2 font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--teal)]"
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={
+                      showPassword
+                        ? "Sembunyikan password"
+                        : "Tampilkan password"
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    <FontAwesomeIcon
+                      icon={
+                        showPassword
+                          ? byPrefixAndName.far["eye-slash"]
+                          : byPrefixAndName.far.eye
+                      }
+                    />
+                  </button>
+                </div>
               </label>
 
               {error ? (

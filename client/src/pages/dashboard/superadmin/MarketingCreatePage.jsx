@@ -29,6 +29,7 @@ export default function MarketingCreatePage() {
         companies={dashboard?.companies || []}
         branches={dashboard?.branches || []}
         users={[...(dashboard?.admins || []), ...(dashboard?.marketingTeam || [])]}
+        onImportSuccess={() => navigate("/dashboard/marketing")}
       />
 
       <Card className="p-6">

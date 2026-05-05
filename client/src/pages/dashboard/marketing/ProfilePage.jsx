@@ -15,17 +15,7 @@ function getInitials(name) {
 function ProfilePhotoPreview({ imageSrc }) {
   return (
     <div className="relative overflow-hidden rounded-[28px] border border-slate-200/90 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
-      <div
-        className="absolute inset-0"
-        aria-hidden="true"
-        style={{
-          backgroundColor: "#e7ebf1",
-          backgroundImage:
-            "linear-gradient(45deg, rgba(148,163,184,0.18) 25%, transparent 25%), linear-gradient(-45deg, rgba(148,163,184,0.18) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(148,163,184,0.18) 75%), linear-gradient(-45deg, transparent 75%, rgba(148,163,184,0.18) 75%)",
-          backgroundSize: "24px 24px",
-          backgroundPosition: "0 0, 0 12px, 12px -12px, -12px 0px",
-        }}
-      />
+      <div className="absolute inset-0 bg-zinc-500" />
 
       {imageSrc ? (
         <img
@@ -129,10 +119,12 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Social Media
-              </p>
+            <div className="mt-10">
+              <div className="p-4 text-center bg-slate-50 rounded-2xl border border-slate-200">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Social Media
+                </p>
+              </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {socialMediaItems.length ? (
                   socialMediaItems.map((item) => (
