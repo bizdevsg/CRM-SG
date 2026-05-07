@@ -66,6 +66,13 @@ function normalizeCompanyName(value) {
     .trim();
 }
 
+function removeParentheticalText(value) {
+  return String(value || "")
+    .replace(/\s*\([^)]*\)\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 const COMPANY_BRANDS = {
   1: {
     key: "solid-gold",
@@ -123,7 +130,11 @@ const SECTION_NAV_ITEMS = [
     icon: byPrefixAndName.fas["scale-balanced"],
   },
   { id: "corporate", label: "Corporate", icon: byPrefixAndName.fas.building },
-  { id: "social-media", label: "Social Media", icon: byPrefixAndName.fas.globe },
+  {
+    id: "social-media",
+    label: "Social Media",
+    icon: byPrefixAndName.fas.globe,
+  },
 ];
 const SECTION_SCROLL_OFFSET = 140;
 
@@ -154,8 +165,8 @@ function getLastReachedSection(sections, viewportMarker) {
 }
 
 export default function PublicEcardPage() {
-  const { marketingSlug, ecardSlug } = useParams();
-  const resolvedSlug = marketingSlug || ecardSlug;
+  const { legacySlug, ecardSlug } = useParams();
+  const resolvedSlug = legacySlug || ecardSlug;
   const [ecard, setEcard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -249,9 +260,7 @@ export default function PublicEcardPage() {
 
         if (lastSection?.id) {
           setActiveSection((currentSection) =>
-            currentSection === lastSection.id
-              ? currentSection
-              : lastSection.id,
+            currentSection === lastSection.id ? currentSection : lastSection.id,
           );
         }
 
@@ -398,8 +407,9 @@ export default function PublicEcardPage() {
   const branch = ecard.branch || {};
   const certificates = ecard.certificates || [];
   const socialMedia = ecard.socialMedia || [];
-  const headline =
-    profile.ecardJobTitle || profile.positionTitle || "Marketing Consultant";
+  const headline = removeParentheticalText(
+    profile.ecardJobTitle || profile.positionTitle || "Marketing Consultant",
+  );
   const companyBrand = getCompanyBrand(company);
   const CompanyContainer = getCompanyContainer(companyBrand?.key);
   const companyVideoUrl = normalizePublicLink(company.videoUrl);
@@ -476,10 +486,10 @@ export default function PublicEcardPage() {
   function getCompanyBackground(companyKey) {
     switch (companyKey) {
       case "solid-gold":
-        return "bg-gradient-to-br from-yellow-50 to-yellow-100";
+        return "bg-gradient-to-br from-neutral-900 to-neutral-800";
 
       case "riffan":
-        return "bg-gradient-to-br from-blue-50 to-blue-100";
+        return "bg-gradient-to-br from-emerald-50 to-emerald-100";
 
       case "kontak-perkasa":
         return "bg-gradient-to-br from-green-50 to-green-100";
@@ -488,7 +498,7 @@ export default function PublicEcardPage() {
         return "bg-gradient-to-br from-sky-50 to-sky-100";
 
       case "equityworld":
-        return "bg-gradient-to-br from-red-50 to-red-100";
+        return "bg-gradient-to-br from-orange-50 to-orange-100";
 
       default:
         return "bg-white";

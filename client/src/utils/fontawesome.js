@@ -1,4 +1,5 @@
 import {
+  faAddressBook as farAddressBook,
   faCircleCheck as farCircleCheck,
   faEye as farEye,
   faEyeSlash as farEyeSlash,
@@ -22,6 +23,7 @@ import {
   faUser,
   faEye,
   faEyeSlash,
+  faBriefcase,
 } from "@fortawesome/free-solid-svg-icons";
 
 export const byPrefixAndName = {
@@ -29,6 +31,7 @@ export const byPrefixAndName = {
     "circle-check": farCircleCheck,
     eye: farEye,
     "eye-slash": farEyeSlash,
+    "address-book": farAddressBook,
   },
   fas: {
     "address-book": faAddressBook,
@@ -48,5 +51,6 @@ export const byPrefixAndName = {
     "eye": faEye,
     "triangle-exclamation": faTriangleExclamation,
     user: faUser,
+    briefcase: faBriefcase
   },
 };

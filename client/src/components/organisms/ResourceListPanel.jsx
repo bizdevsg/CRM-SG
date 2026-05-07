@@ -8,7 +8,10 @@ export default function ResourceListPanel({
   headerAction,
   onDelete,
   renderActions,
-  renderItem
+  renderItem,
+  gridClassName = "",
+  itemClassName = "",
+  actionsClassName = "",
 }) {
   return (
     <Card className="overflow-hidden">
@@ -19,7 +22,7 @@ export default function ResourceListPanel({
       {items.length === 0 ? (
         <p className="px-6 py-6 text-sm leading-6 text-[color:var(--ink-soft)]">{emptyText}</p>
       ) : (
-        <div className="grid gap-4 p-5 md:grid-cols-2 2xl:grid-cols-3">
+        <div className={`grid gap-4 p-5 md:grid-cols-2 2xl:grid-cols-3 ${gridClassName}`.trim()}>
           {items.map((item) => {
             const customActions = renderActions ? renderActions(item) : null;
             const hasActions = Boolean(customActions) || Boolean(onDelete);
@@ -27,13 +30,13 @@ export default function ResourceListPanel({
             return (
               <article
                 key={item.id}
-                className="flex h-full flex-col justify-between rounded-[26px] border border-[color:var(--line)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_14px_35px_rgba(16,32,51,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(16,32,51,0.08)]"
+                className={`flex h-full flex-col justify-between rounded-[26px] border border-[color:var(--line)] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-4 shadow-[0_14px_35px_rgba(16,32,51,0.05)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(16,32,51,0.08)] ${itemClassName}`.trim()}
               >
                 <div className="min-h-0 flex-1">
                   {renderItem(item)}
                 </div>
                 {hasActions ? (
-                  <div className="mt-4 flex flex-wrap gap-3 border-t border-[color:var(--line)] pt-4">
+                  <div className={`mt-4 flex flex-wrap gap-3 border-t border-[color:var(--line)] pt-4 ${actionsClassName}`.trim()}>
                     {customActions}
                     {onDelete ? (
                       <Button variant="ghost" className="px-4 py-2" onClick={() => onDelete(item.id)}>

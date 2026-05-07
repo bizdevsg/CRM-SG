@@ -89,8 +89,12 @@ function getClientBaseUrl() {
   return configuredUrl || "http://localhost:5173";
 }
 
+function companySlugFromName(value) {
+  return slugify(value) || "company";
+}
+
 export function buildPublicEcardUrl(user) {
-  return `${getClientBaseUrl()}/marketing/${user.slug}`;
+  return `${getClientBaseUrl()}/${companySlugFromName(user?.companyName || user?.company_name)}/ecard/${user.slug}`;
 }
 
 const SOCIAL_MEDIA_PLATFORM_LABELS = {

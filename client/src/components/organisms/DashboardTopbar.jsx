@@ -36,6 +36,13 @@ function resolveHeaderContent(pathname, currentMenu, fallbackTitle, fallbackSubt
     };
   }
 
+  if (/^\/dashboard\/ecards\/[^/]+\/preview$/.test(pathname)) {
+    return {
+      title: "Preview Kartu Nama",
+      subtitle: "Tinjau hasil kartu nama QR sebelum diunduh."
+    };
+  }
+
   return {
     title: currentMenu?.label || fallbackTitle,
     subtitle: fallbackSubtitle

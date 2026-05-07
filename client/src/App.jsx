@@ -17,6 +17,7 @@ import CertificateEditPage from "./pages/dashboard/marketing/CertificateEditPage
 import EcardsPage from "./pages/dashboard/marketing/EcardsPage";
 import EcardCreatePage from "./pages/dashboard/marketing/EcardCreatePage";
 import EcardEditPage from "./pages/dashboard/marketing/EcardEditPage";
+import EcardPreviewPage from "./pages/dashboard/marketing/EcardPreviewPage";
 import ProfilePage from "./pages/dashboard/marketing/ProfilePage";
 import ProfileEditPage from "./pages/dashboard/marketing/ProfileEditPage";
 import BranchesPage from "./pages/dashboard/superadmin/BranchesPage";
@@ -54,7 +55,8 @@ export default function App() {
           </GuestRoute>
         }
       />
-      <Route path="/marketing/:marketingSlug" element={<PublicEcardPage />} />
+      <Route path="/marketing/:legacySlug" element={<PublicEcardPage />} />
+      <Route path="/:companySlug/ecard/:ecardSlug" element={<PublicEcardPage />} />
       <Route path="/:companySlug/:branchCode/:ecardSlug" element={<PublicEcardPage />} />
       <Route
         path="/dashboard"
@@ -232,6 +234,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["marketing"]}>
               <EcardEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="ecards/:ecardId/preview"
+          element={
+            <ProtectedRoute allowedRoles={["marketing"]}>
+              <EcardPreviewPage />
             </ProtectedRoute>
           }
         />
