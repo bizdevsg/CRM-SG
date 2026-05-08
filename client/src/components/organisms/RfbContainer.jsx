@@ -127,6 +127,7 @@ export default function RfbContainer({
 }) {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [jobModalOpen, setJobModalOpen] = useState(false);
+  const [companyProfileModalOpen, setCompanyProfileModalOpen] = useState(false);
   const videoPreviewUrl = getRfbVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
   const activeSectionIndex = Math.max(
@@ -247,9 +248,11 @@ export default function RfbContainer({
           <div className="grid grid-cols-2 gap-3">
             <a
               href={rfbCompanyProfilePdf}
-              target="_blank"
-              rel="noreferrer"
               title="Download"
+              onClick={(event) => {
+                event.preventDefault();
+                setCompanyProfileModalOpen(true);
+              }}
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-800 px-7 py-2 text-white cursor-pointer"
             >
               <FontAwesomeIcon
@@ -572,6 +575,51 @@ export default function RfbContainer({
               successClassName="text-sm text-emerald-600"
               submitButtonClassName="w-full rounded-xl bg-red-800 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             />
+          </div>
+        </div>
+      ) : null}
+
+      {companyProfileModalOpen ? (
+        <div
+          className="fixed inset-0 z-[92] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setCompanyProfileModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl rounded-xl bg-white p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h6 className="text-lg font-bold text-slate-900">Company Profile</h6>
+              <button
+                type="button"
+                onClick={() => setCompanyProfileModalOpen(false)}
+                className="flex cursor-pointer items-center justify-end rounded-full text-[#dd2c00] transition hover:scale-105"
+                aria-label="Tutup preview company profile"
+              >
+                <FontAwesomeIcon
+                  icon={byPrefixAndName.fas["circle-xmark"]}
+                  className="text-xl"
+                />
+              </button>
+            </div>
+
+            <div className="mt-4 h-[70vh] overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <iframe
+                src={rfbCompanyProfilePdf}
+                title="Preview Company Profile RFB"
+                className="h-full w-full"
+              />
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <a
+                href={rfbCompanyProfilePdf}
+                download="CP-RFB-Mei2026.pdf"
+                className="inline-flex items-center justify-center rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Download PDF
+              </a>
+            </div>
           </div>
         </div>
       ) : null}
