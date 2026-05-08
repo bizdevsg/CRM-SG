@@ -20,6 +20,7 @@ import EcardEditPage from "./pages/dashboard/marketing/EcardEditPage";
 import EcardPreviewPage from "./pages/dashboard/marketing/EcardPreviewPage";
 import ProfilePage from "./pages/dashboard/marketing/ProfilePage";
 import ProfileEditPage from "./pages/dashboard/marketing/ProfileEditPage";
+import JobApplicationsPage from "./pages/dashboard/marketing/JobApplicationsPage";
 import BranchesPage from "./pages/dashboard/superadmin/BranchesPage";
 import MarketingPage from "./pages/dashboard/superadmin/MarketingPage";
 import MarketingCreatePage from "./pages/dashboard/superadmin/MarketingCreatePage";
@@ -242,6 +243,14 @@ export default function App() {
           element={
             <ProtectedRoute allowedRoles={["marketing"]}>
               <EcardPreviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="job-applications"
+          element={
+            <ProtectedRoute allowedRoles={["marketing"]}>
+              <JobApplicationsPage />
             </ProtectedRoute>
           }
         />

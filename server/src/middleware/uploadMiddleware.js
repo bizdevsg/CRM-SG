@@ -30,3 +30,32 @@ export function createImageUpload(subdirectory, options = {}) {
     }
   });
 }
+
+export function createFileUpload(subdirectory, options = {}) {
+  const allowedMimeTypes = new Set(options.allowedMimeTypes || []);
+  const invalidTypeMessage = options.invalidTypeMessage || "Tipe file tidak didukung.";
+  const maxFileSize = Number(options.maxFileSize || 5 * 1024 * 1024);
+
+  return multer({
+    storage: multer.diskStorage({
+      destination: (_req, _file, callback) => {
+        callback(null, ensureUploadsDirectory(subdirectory));
+      },
+      filename: (_req, file, callback) => {
+        const extension = path.extname(file.originalname).toLowerCase() || ".bin";
+        callback(null, `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${extension}`);
+      }
+    }),
+    fileFilter: (_req, file, callback) => {
+      if (allowedMimeTypes.size > 0 && !allowedMimeTypes.has(file.mimetype)) {
+        callback(new Error(invalidTypeMessage));
+        return;
+      }
+
+      callback(null, true);
+    },
+    limits: {
+      fileSize: maxFileSize
+    }
+  });
+}

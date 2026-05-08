@@ -119,6 +119,13 @@ export const dashboardRoleConfig = {
         group: "Profil",
         icon: "qr",
         to: "/dashboard/ecards"
+      },
+      {
+        id: "job-applications",
+        label: "Pelamar Loker",
+        group: "Profil",
+        icon: "users",
+        to: "/dashboard/job-applications"
       }
     ]
   }

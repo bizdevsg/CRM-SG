@@ -526,6 +526,7 @@ export default function PublicEcardPage() {
         branch={branch}
         corporateStats={corporateStats}
         socialMediaItems={socialMediaItems}
+        jobApplicationEcardSlug={ecard.slug}
       />
     </div>
   );

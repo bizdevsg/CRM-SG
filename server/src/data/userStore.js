@@ -220,6 +220,18 @@ function mapEcardEntry(row, user) {
   };
 }
 
+function mapJobApplicationEntry(row) {
+  return {
+    id: String(row.id),
+    userId: Number(row.user_id),
+    applicantName: row.applicant_name,
+    applicantEmail: row.applicant_email,
+    whatsappNumber: row.whatsapp_number,
+    cvFileUrl: row.cv_file_url,
+    createdAt: row.created_at
+  };
+}
+
 function buildSocialMediaEntries(source) {
   return SOCIAL_MEDIA_PLATFORMS.map((platform) => {
     const url = source?.[platform] || null;
@@ -962,14 +974,19 @@ export async function verifyPassword(user, plainPassword) {
 }
 
 export async function getMarketingResources(userId) {
-  const [userRow, certificateRows, ecardRows] = await Promise.all([
+  const [userRow, certificateRows, ecardRows, jobApplicationRows] = await Promise.all([
     getUserBaseRowById(userId),
     query("SELECT id, title, image_url FROM marketing_certificates WHERE user_id = ? ORDER BY id DESC", [
       userId
     ]),
-    query("SELECT id, slug, qr_code_url, is_active, created_at FROM ecards WHERE user_id = ? ORDER BY id DESC", [
-      userId
-    ])
+    query("SELECT id, slug, qr_code_url, is_active, created_at FROM ecards WHERE user_id = ? ORDER BY id DESC", [userId]),
+    query(
+      `SELECT id, user_id, applicant_name, applicant_email, whatsapp_number, cv_file_url, created_at
+      FROM marketing_job_applications
+      WHERE user_id = ?
+      ORDER BY id DESC`,
+      [userId]
+    )
   ]);
 
   const user = mapUserRow(userRow);
@@ -1020,8 +1037,67 @@ export async function getMarketingResources(userId) {
     biodata,
     socialMedia,
     certificates: certificateRows.map(mapCertificateEntry),
-    ecards: ecardRows.map((row) => mapEcardEntry(row, user))
+    ecards: ecardRows.map((row) => mapEcardEntry(row, user)),
+    jobApplications: jobApplicationRows.map(mapJobApplicationEntry)
   };
+}
+
+export async function listMarketingJobApplications(userId) {
+  const rows = await query(
+    `SELECT id, user_id, applicant_name, applicant_email, whatsapp_number, cv_file_url, created_at
+    FROM marketing_job_applications
+    WHERE user_id = ?
+    ORDER BY id DESC`,
+    [userId]
+  );
+
+  return rows.map(mapJobApplicationEntry);
+}
+
+export async function createJobApplicationByEcardSlug(ecardSlug, payload) {
+  const normalizedSlug = slugify(ecardSlug);
+
+  if (!normalizedSlug) {
+    return null;
+  }
+
+  const ecardRows = await query(
+    `SELECT e.user_id
+    FROM ecards e
+    INNER JOIN users u ON u.id = e.user_id
+    WHERE e.slug = ?
+      AND e.is_active = TRUE
+      AND u.is_active = TRUE
+    LIMIT 1`,
+    [normalizedSlug]
+  );
+
+  const ecard = ecardRows[0];
+
+  if (!ecard) {
+    return null;
+  }
+
+  const result = await query(
+    `INSERT INTO marketing_job_applications (
+      user_id,
+      applicant_name,
+      applicant_email,
+      whatsapp_number,
+      cv_file_url
+    ) VALUES (?, ?, ?, ?, ?)`,
+    [ecard.user_id, payload.applicantName, payload.applicantEmail, payload.whatsappNumber, payload.cvFileUrl]
+  );
+
+  const rows = await query(
+    `SELECT id, user_id, applicant_name, applicant_email, whatsapp_number, cv_file_url, created_at
+    FROM marketing_job_applications
+    WHERE id = ?
+    LIMIT 1`,
+    [result.insertId]
+  );
+
+  return rows[0] ? mapJobApplicationEntry(rows[0]) : null;
 }
 
 export async function updateUserProfile(userId, payload) {
@@ -1320,6 +1396,7 @@ export async function getPublicEcardByRoute({ ecardSlug, slug }) {
       address: row.branch_address || ""
     },
     profile,
+    userId: Number(row.user_id),
     socialMedia: [
       profile.phone ? { id: "phone", label: "Telepon", url: `tel:${profile.phone}`, value: profile.phone } : null,
       profile.email ? { id: "email", label: "Email", url: `mailto:${profile.email}`, value: profile.email } : null,
@@ -1418,7 +1495,8 @@ export async function getDashboardData(actor) {
       biodataCount: resources.biodata.length,
       socialMediaCount: resources.socialMedia.length,
       certificateCount: resources.certificates.length,
-      ecardCount: resources.ecards.length
+      ecardCount: resources.ecards.length,
+      jobApplicationCount: resources.jobApplications.length
     }
   };
 }

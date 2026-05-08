@@ -11,6 +11,7 @@ import safeAlertFill from "../../assets/mingcute_safe-alert-line.png";
 import LogoBPF from "../../assets/logoBPF.png";
 import logoBPF2 from "../../assets/LOGO-BPF-2.png";
 import { byPrefixAndName } from "../../utils/fontawesome";
+import PublicJobApplicationSection from "./PublicJobApplicationSection";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
@@ -129,8 +130,10 @@ export default function BestprofitContainer({
   branch,
   corporateStats,
   socialMediaItems,
+  jobApplicationEcardSlug,
 }) {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [jobModalOpen, setJobModalOpen] = useState(false);
   const videoPreviewUrl = getBestprofitVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
   const activeSectionIndex = Math.max(
@@ -308,6 +311,16 @@ export default function BestprofitContainer({
               </div>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => setJobModalOpen(true)}
+            className="mt-4 block w-full rounded-xl border border-sky-500/50 bg-white p-4 transition hover:bg-sky-50"
+          >
+            <div className="mx-auto flex w-fit items-center gap-2 text-sky-700">
+              <FontAwesomeIcon icon={byPrefixAndName.fas.briefcase} className="h-5" />
+              <p>Loker</p>
+            </div>
+          </button>
         </section>
 
         <section
@@ -542,6 +555,38 @@ export default function BestprofitContainer({
                 />
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {jobModalOpen ? (
+        <div
+          className="fixed inset-0 z-[91] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setJobModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-3xl bg-white p-5 shadow-[0_24px_60px_rgba(0,0,0,0.35)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h6 className="text-lg font-bold text-slate-900">Form Loker</h6>
+              <button
+                type="button"
+                onClick={() => setJobModalOpen(false)}
+                className="rounded-full text-sky-700 transition hover:scale-105"
+                aria-label="Tutup form loker"
+              >
+                <FontAwesomeIcon icon={byPrefixAndName.fas["circle-xmark"]} className="text-xl" />
+              </button>
+            </div>
+            <PublicJobApplicationSection
+              ecardSlug={jobApplicationEcardSlug}
+              titleClassName="hidden"
+              descriptionClassName="mb-3 text-sm text-slate-500"
+              errorClassName="text-sm text-rose-600"
+              successClassName="text-sm text-emerald-600"
+              submitButtonClassName="w-full rounded-xl bg-sky-800 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            />
           </div>
         </div>
       ) : null}

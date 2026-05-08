@@ -239,6 +239,20 @@ async function createTables() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS marketing_job_applications (
+      id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      user_id BIGINT UNSIGNED NOT NULL,
+      applicant_name VARCHAR(160) NOT NULL,
+      applicant_email VARCHAR(180) NOT NULL,
+      whatsapp_number VARCHAR(50) NOT NULL,
+      cv_file_url TEXT NOT NULL,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
 }
 
 async function ensureColumns() {
@@ -283,6 +297,26 @@ async function ensureColumns() {
   await ensureColumn("marketing_certificates", "image_url", "TEXT NULL AFTER title");
   await ensureColumn("ecards", "qr_code_url", "TEXT NULL AFTER slug");
   await ensureColumn("ecards", "is_active", "BOOLEAN DEFAULT TRUE AFTER qr_code_url");
+  await ensureColumn(
+    "marketing_job_applications",
+    "applicant_name",
+    "VARCHAR(160) NOT NULL AFTER user_id"
+  );
+  await ensureColumn(
+    "marketing_job_applications",
+    "applicant_email",
+    "VARCHAR(180) NOT NULL AFTER applicant_name"
+  );
+  await ensureColumn(
+    "marketing_job_applications",
+    "whatsapp_number",
+    "VARCHAR(50) NOT NULL AFTER applicant_email"
+  );
+  await ensureColumn(
+    "marketing_job_applications",
+    "cv_file_url",
+    "TEXT NOT NULL AFTER whatsapp_number"
+  );
 }
 
 async function migrateUsersToNewColumns() {

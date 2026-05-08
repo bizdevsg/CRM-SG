@@ -11,6 +11,7 @@ import linkedinIcon from "../../assets/linkedin-icon.png";
 import safeAlertFill from "../../assets/safe-alert-fill.png";
 import rfbCompanyProfilePdf from "../../assets/brosur-pt/CP-RFB-Mei2026.pdf";
 import { byPrefixAndName } from "../../utils/fontawesome";
+import PublicJobApplicationSection from "./PublicJobApplicationSection";
 
 const SOCIAL_MEDIA_IMAGE_BY_ID = {
   tiktok: tiktokIcon,
@@ -122,8 +123,10 @@ export default function RfbContainer({
   branch,
   corporateStats,
   socialMediaItems,
+  jobApplicationEcardSlug,
 }) {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [jobModalOpen, setJobModalOpen] = useState(false);
   const videoPreviewUrl = getRfbVideoEmbedUrl(companyVideoUrl);
   const hasVideoSource = Boolean(videoPreviewUrl);
   const activeSectionIndex = Math.max(
@@ -244,7 +247,8 @@ export default function RfbContainer({
           <div className="grid grid-cols-2 gap-3">
             <a
               href={rfbCompanyProfilePdf}
-              download="CP-RFB-Mei2026.pdf"
+              target="_blank"
+              rel="noreferrer"
               title="Download"
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-red-800 px-7 py-2 text-white cursor-pointer"
             >
@@ -469,6 +473,16 @@ export default function RfbContainer({
                 </div>
               )}
             </div>
+            <button
+              type="button"
+              onClick={() => setJobModalOpen(true)}
+              className="mt-4 block w-full rounded-full border border-red-200/50 bg-red-100/20 p-4 transition hover:bg-red-100/30"
+            >
+              <div className="mx-auto flex w-fit items-center gap-2 text-white">
+                <FontAwesomeIcon icon={byPrefixAndName.fas.briefcase} className="h-5" />
+                <p>Loker</p>
+              </div>
+            </button>
           </div>
         </section>
 
@@ -525,6 +539,39 @@ export default function RfbContainer({
                 />
               </div>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {jobModalOpen ? (
+        <div
+          className="fixed inset-0 z-[91] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setJobModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-3xl bg-white p-5 shadow-[0_24px_60px_rgba(0,0,0,0.35)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h6 className="text-lg font-bold text-slate-900">Form Loker</h6>
+              <button
+                type="button"
+                onClick={() => setJobModalOpen(false)}
+                className="rounded-full text-red-700 transition hover:scale-105"
+                aria-label="Tutup form loker"
+              >
+                <FontAwesomeIcon icon={byPrefixAndName.fas["circle-xmark"]} className="text-xl" />
+              </button>
+            </div>
+            <PublicJobApplicationSection
+              ecardSlug={jobApplicationEcardSlug}
+              className=""
+              titleClassName="hidden"
+              descriptionClassName="mb-3 text-sm text-slate-500"
+              errorClassName="text-sm text-rose-600"
+              successClassName="text-sm text-emerald-600"
+              submitButtonClassName="w-full rounded-xl bg-red-800 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            />
           </div>
         </div>
       ) : null}

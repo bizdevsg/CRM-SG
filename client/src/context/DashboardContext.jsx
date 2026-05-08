@@ -94,6 +94,13 @@ function buildSummaryCards(role, dashboard) {
       description: "QR code e-card yang sudah berhasil dibuat.",
       icon: "qr",
       tint: "bg-fuchsia-50 text-fuchsia-600"
+    },
+    {
+      label: "Pelamar Loker",
+      value: stats.jobApplicationCount ?? 0,
+      description: "Jumlah pelamar kerja yang masuk dari e-card Anda.",
+      icon: "users",
+      tint: "bg-rose-50 text-rose-600"
     }
   ];
 }
