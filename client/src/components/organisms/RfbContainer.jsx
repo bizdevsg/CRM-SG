@@ -585,10 +585,10 @@ export default function RfbContainer({
           onClick={() => setCompanyProfileModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-4xl rounded-xl bg-white p-4 shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:p-5"
+            className="relative flex h-[92vh] w-full max-w-4xl flex-col rounded-xl bg-white p-3 shadow-[0_24px_60px_rgba(0,0,0,0.35)] sm:h-[88vh] sm:p-5"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
               <h6 className="text-lg font-bold text-slate-900">Company Profile</h6>
               <button
                 type="button"
@@ -603,15 +603,37 @@ export default function RfbContainer({
               </button>
             </div>
 
-            <div className="mt-4 h-[70vh] overflow-hidden rounded-lg border border-slate-200 bg-white">
-              <iframe
-                src={rfbCompanyProfilePdf}
-                title="Preview Company Profile RFB"
+            <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <object
+                data={`${rfbCompanyProfilePdf}#view=FitH`}
+                type="application/pdf"
                 className="h-full w-full"
-              />
+              >
+                <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm text-slate-600">
+                    Preview PDF tidak didukung di device ini.
+                  </p>
+                  <a
+                    href={rfbCompanyProfilePdf}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-lg bg-red-800 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Buka Full Screen
+                  </a>
+                </div>
+              </object>
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3">
+              <a
+                href={rfbCompanyProfilePdf}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-800"
+              >
+                Buka Full
+              </a>
               <a
                 href={rfbCompanyProfilePdf}
                 download="CP-RFB-Mei2026.pdf"
